@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panier</title>
+
+  <!-- Favicons (optionnel) -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="favicon-16.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Police Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;400;600;700;900&display=swap" rel="stylesheet">
+
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    :root{ --bg:#0f1014; --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --accent:#222; --radius:16px; --container: 1100px; --pad-x: 20px; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{ margin:0; font-family: "Playfair Display", serif; background: var(--paper); color: var(--ink); }
+    img{ max-width:100%; display:block; }
+    a{ color: inherit; text-decoration: none; }
+    .container{ width:100%; max-width: var(--container); margin: 0 auto; padding-left: var(--pad-x); padding-right: var(--pad-x); }
+
+    /* Appbar */
+    .appbar{ position:sticky; top:0; z-index:20; background: var(--paper); border-bottom: 1px solid var(--line); width: 100%; }
+    .bar{ height:64px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 var(--pad-x); }
+    .title{ font-weight: 600; font-size: 22px; text-align:center }
+    .icon-btn{ width:44px; height:44px; display:inline-grid; place-items:center; border-radius:50%; border:1px solid transparent; cursor:pointer; }
+    .icon-btn:hover{ background:#f2f3f7; border-color:#e6e8ef }
+    .icon-btn svg{ width:22px; height:22px; fill:#000 }
+    .left{ display:flex; gap:6px; align-items:center }
+    .right{ justify-self:end }
+
+    /* Drawer */
+    .drawer{ position:fixed; inset:0 auto 0 0; width:320px; background:#fff; border-right:1px solid var(--line); transform: translateX(-100%); transition: transform .25s ease; z-index:30; }
+    #drawer-toggle:checked ~ .drawer{ transform: translateX(0) }
+    #drawer-toggle:checked ~ .backdrop{ opacity:1; pointer-events:auto }
+    .drawer-inner{ height:100%; padding:20px; display:flex; flex-direction:column; }
+    .brand{ font-weight: 900; font-size: 32px; margin:60px 0 12px }
+    .divider{ border:0; height:1px; background:#000; opacity:.35; margin:10px 0 }
+    .drawer-nav{ display:grid; gap:20px; margin:40px 0 }
+    .nav-link {font-weight: 600; font-size: 24px; line-height: 1.3;}
+    .drawer-spacer{ flex:1 }
+    .social-lines{ display:grid; gap:10px; font-size: 16px }
+    .backdrop{ position:fixed; inset:0; background: rgba(0,0,0,.25); z-index:25; opacity:0; pointer-events:none; transition:.25s; }
+
+    /* Panier */
+    main{ padding: 30px 0 60px; }
+    .grid{ display:grid; grid-template-columns: 1fr; gap: 24px; }
+    @media (min-width: 950px){ .grid{ grid-template-columns: 1.4fr 1fr; } }
+
+    .cart{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .cart-header, .cart-line{ display:grid; grid-template-columns: 1fr 120px 110px 40px; gap:10px; align-items:center; padding:12px; }
+    .cart-header{ background:#fafbfe; font-weight:700; }
+    .cart-line{ border-top:1px solid var(--line); }
+    .cart-item{ display:flex; gap:12px; align-items:center; }
+    .thumb{ width:80px; height:80px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:#fff; flex:0 0 auto; }
+    .thumb img{ width:100%; height:100%; object-fit:cover; }
+    .name{ font-weight:700; }
+    .muted{ color:var(--muted); font-size:14px; }
+
+    .qty{ display:inline-flex; gap:8px; align-items:center; }
+    .qty button{ width:28px; height:28px; border-radius:6px; background:#f2f3f7; border:1px solid #e6e8ef; cursor:pointer; }
+
+    .rm{ background:transparent; border:0; font-size:20px; color:#999; cursor:pointer; }
+
+    .summary{ border:1px solid var(--line); border-radius:12px; padding:16px; display:grid; gap:12px; align-self:start; position:sticky; top:86px; }
+    .row{ display:flex; justify-content:space-between; }
+    .total{ font-weight:800; font-size:20px; }
+
+    .btn{ border:1px solid var(--line); background:#111; color:#fff; padding:12px 14px; border-radius:10px; cursor:pointer; text-align:center; }
+    .btn.secondary{ background:#fff; color:#111; }
+
+    .empty{ text-align:center; padding:40px; border:1px dashed var(--line); border-radius:12px; }
+
+    /* Paiement Stripe */
+    #payment-form{ display:grid; gap:10px; }
+    #card-element{ padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
+    #status{ min-height: 1.4em; color: #0a7; }
+
+    /* Footer */
+    .site-footer{ padding: 20px; background:#fff }
+    .site-footer .divider{ background:#000; opacity:.4 }
+    .footer-top{ display:flex; gap:20px; justify-content:space-around; align-items:flex-start; padding: 10px 0 20px }
+    .footer-title{ font-weight: 700; font-size: 18px; margin: 6px 0 }
+    .footer-links{ display:grid; gap:12px; margin-top:14px }
+    .footer-links a{ font-weight: 600; font-size: 16px }
+    .footer-contact{ width:min(800px, 100%); margin: 0 auto; text-align:center; padding: 0 20px 20px }
+    .footer-contact .line{ font-size: 16px; display:flex; gap:8px; justify-content:center }
+    .credit{ width:220px; margin: 20px auto 0 }
+  </style>
+</head>
+<body>
+
+<input id="drawer-toggle" type="checkbox" hidden>
+
+<!-- Drawer -->
+<aside class="drawer" aria-label="Menu latéral">
+  <div class="drawer-inner">
+    <h1 class="brand">TURPIN Loan</h1>
+    <hr class="divider">
+    <nav class="drawer-nav" aria-label="Navigation latérale">
+      <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
+      <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
+      <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
+      <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
+      <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
+    </nav>
+    <div class="drawer-spacer"></div>
+    <h2 class="footer-title">Social Media</h2>
+    <hr class="divider">
+    <div class="social-lines">
+      <div>Instagram : <a class="value" href="https://instagram.com/turpinloanart" target="_blank" rel="noopener">turpinloanart</a></div>
+      <div>TikTok : <a class="value" href="https://tiktok.com/@turpinloanart" target="_blank" rel="noopener">turpinloanart</a></div>
+    </div>
+  </div>
+</aside>
+
+<label class="backdrop" for="drawer-toggle" aria-hidden="true"></label>
+
+<!-- Navbar -->
+<header class="appbar">
+  <div class="bar">
+    <div class="left">
+      <label class="icon-btn" for="drawer-toggle" aria-label="Menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </label>
+    </div>
+    <h2 class="title">Panier</h2>
+    <div class="right"></div>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="grid">
+      <!-- Panier -->
+      <section class="cart" id="cart">
+        <div class="cart-header">
+          <div>Article</div>
+          <div>Quantité</div>
+          <div>Prix</div>
+          <div></div>
+        </div>
+        <div id="cart-body"></div>
+      </section>
+
+      <!-- Récap & Paiement -->
+      <aside class="summary">
+        <div class="row"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
+        <div class="row muted"><span>Frais de port</span><span id="shipping">Calculés à l'étape suivante</span></div>
+        <div class="row total"><span>Total</span><span id="total">0 €</span></div>
+        <button id="clear" class="btn secondary">Vider le panier</button>
+        <hr class="divider" aria-hidden="true">
+        <form id="payment-form">
+          <input type="email" id="email" placeholder="Email" required />
+          <div id="card-element"><!-- Stripe Elements --></div>
+          <button id="pay" type="submit" class="btn">Payer avec Stripe</button>
+          <div id="status"></div>
+        </form>
+        <div class="muted" style="font-size:12px">Paiement sécurisé 3D Secure. Taxes incluses. En cas d'échec serveur, configure d'abord l'API `/api/create-payment-intent` comme dans le starter.</div>
+      </aside>
+    </div>
+
+    <div id="empty" class="empty" style="display:none">
+      Votre panier est vide. <a href="/loanturpin/merchandising" style="text-decoration:underline">Découvrir les produits</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer id="contact" class="site-footer" role="contentinfo">
+    <hr class="divider" aria-hidden="true">
+    <div class="footer-top">
+      <div class="col">
+        <h5 class="footer-title">Page</h5>
+        <hr class="divider w30" aria-hidden="true">
+        <nav class="footer-links" aria-label="Pied de page - navigation">
+          <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
+          <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
+          <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
+          <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
+          <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
+        </nav>
+      </div>
+      <div class="col">
+        <h5 class="footer-title">Social Media</h5>
+        <hr class="divider w82" aria-hidden="true">
+        <div class="social-lines">
+          <div class="line"><span>Instagram :</span> <a href="https://instagram.com/turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
+          <div class="line"><span>TikTok :</span> <a href="https://tiktok.com/@turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-contact">
+      <h5 class="footer-title">Contact Me</h5>
+      <hr class="divider" aria-hidden="true">
+      <p class="line"><span>E‑Mail :</span> <a href="mailto:t.loan.contact@gmail.com">t.loan.contact@gmail.com</a></p>
+      <div class="credit">
+        <hr class="divider thin" aria-hidden="true">
+        <p>© 2025 TURPIN Loan</p>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+  // ========= Config produits =========
+  // Essaie d'abord de charger products.json (si tu l'as déployé). Sinon fallback sur ce catalogue minimal.
+  const FALLBACK_PRODUCTS = [
+    { id: 'affiche-soleil-a3', name: 'Affiche « Soleil » — A3', price: 3900, currency: 'eur', image: 'images/products/affiche-soleil-a3.jpg', variants:[{id:'a3',label:'A3'},{id:'a2',label:'A2', price:4900}] },
+    { id: 'tshirt-constellation-m', name: 'T‑shirt « Constellation »', price: 2900, currency: 'eur', image: 'images/products/tshirt-constellation.jpg' }
+  ];
+
+  let PRODUCTS = FALLBACK_PRODUCTS;
+  fetch('/products.json').then(r => r.ok ? r.json() : Promise.reject()).then(json => { PRODUCTS = json; render(); }).catch(() => render());
+
+  // ========= Panier =========
+  const € = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v/100);
+  const cartKey = 'cart'; // [{id, qty, variantId?}]
+
+  function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
+  function priceFor(p, variantId){
+    let price = p.price;
+    if (variantId && Array.isArray(p.variants)){
+      const v = p.variants.find(v => v.id === variantId);
+      if (v && v.price) price = v.price;
+    }
+    return price;
+  }
+
+  function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
+  function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
+
+  function computeSubtotal(c){
+    return c.reduce((sum, line) => {
+      const p = getProduct(line.id); if (!p) return sum;
+      return sum + priceFor(p, line.variantId) * line.qty;
+    }, 0);
+  }
+
+  function render(){
+    const body = document.getElementById('cart-body');
+    const emptyEl = document.getElementById('empty');
+    const container = document.getElementById('cart');
+    body.innerHTML = '';
+    const cart = loadCart();
+
+    if (!cart.length){
+      container.style.display = 'none';
+      emptyEl.style.display = 'block';
+      document.getElementById('subtotal').textContent = '0 €';
+      document.getElementById('total').textContent = '0 €';
+      return;
+    }
+    container.style.display = '';
+    emptyEl.style.display = 'none';
+
+    cart.forEach((line, i) => {
+      const p = getProduct(line.id); if (!p) return;
+      const price = priceFor(p, line.variantId);
+      const el = document.createElement('div');
+      el.className = 'cart-line';
+      const variantLabel = line.variantId && p.variants ? (p.variants.find(v => v.id===line.variantId)?.label || line.variantId) : '';
+      el.innerHTML = `
+        <div class="cart-item">
+          <div class="thumb"><img src="${p.image}" alt="${p.name}"></div>
+          <div>
+            <div class="name">${p.name}</div>
+            ${variantLabel ? `<div class="muted">Variante : ${variantLabel}</div>` : ''}
+          </div>
+        </div>
+        <div class="qty">
+          <button class="dec" data-i="${i}">−</button>
+          <span>${line.qty}</span>
+          <button class="inc" data-i="${i}">+</button>
+        </div>
+        <div><strong>${€(price * line.qty)}</strong></div>
+        <button class="rm" title="Retirer" data-i="${i}">×</button>
+      `;
+      body.appendChild(el);
+    });
+
+    // Totaux
+    const subtotal = computeSubtotal(cart);
+    document.getElementById('subtotal').textContent = €(subtotal);
+    document.getElementById('total').textContent = €(subtotal); // sans frais de port
+
+    // Actions qty/remove
+    body.onclick = (e) => {
+      const inc = e.target.closest('.inc');
+      const dec = e.target.closest('.dec');
+      const rm = e.target.closest('.rm');
+      const c = loadCart();
+      if (inc){ c[+inc.dataset.i].qty++; saveCart(c); render(); }
+      if (dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); }
+      if (rm){ c.splice(+rm.dataset.i, 1); saveCart(c); render(); }
+    };
+  }
+
+  document.getElementById('clear').onclick = () => { localStorage.setItem(cartKey, '[]'); render(); };
+
+  // ========= Paiement Stripe (Elements + PaymentIntent côté serveur) =========
+  const stripe = Stripe('pk_test_REMPLACE_MOI'); // Ta clé publique Stripe (test)
+  let elements = stripe.elements();
+  const card = elements.create('card');
+  card.mount('#card-element');
+
+  async function createPaymentIntent(email){
+    const cart = loadCart();
+    const res = await fetch('/api/create-payment-intent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart, email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur paiement');
+    return data.clientSecret;
+  }
+
+  document.getElementById('payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('status');
+    const btn = document.getElementById('pay');
+    const email = document.getElementById('email').value.trim();
+    const cart = loadCart();
+    if (!cart.length){ status.textContent = 'Panier vide.'; return; }
+    btn.disabled = true; status.textContent = 'Création du paiement…';
+    try{
+      const clientSecret = await createPaymentIntent(email);
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card, billing_details: { email } }
+      });
+      if (error){ status.textContent = error.message || 'Paiement refusé.'; btn.disabled = false; return; }
+      if (paymentIntent.status === 'succeeded'){
+        status.textContent = 'Merci ! Paiement réussi.';
+        localStorage.setItem(cartKey, '[]');
+        render();
+      } else {
+        status.textContent = 'Statut: ' + paymentIntent.status;
+      }
+    } catch(err){
+      status.textContent = err.message + '\nAstuce: vérifie que ton serveur Express est en route et que /api/create-payment-intent répond.';
+    } finally { btn.disabled = false; }
+  });
+
+  // Init render au chargement
+  window.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>
