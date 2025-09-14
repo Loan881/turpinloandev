@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Checkout — Paiement sécurisé</title>
+  <title>Checkout</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,28 +17,22 @@
     .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px var(--pad) 60px }
     h1{ font-size:28px; margin:16px 0 6px; }
     p.muted{ color:var(--muted); margin-top:0 }
-
     .grid{ display:grid; gap:24px; grid-template-columns:1fr; }
     @media(min-width:980px){ .grid{ grid-template-columns:1.2fr .8fr } }
-
     .card{ border:1px solid var(--line); border-radius:12px; padding:16px; }
     .section-title{ font-weight:700; font-size:18px; margin:6px 0 12px }
-
     .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
     .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px }
     .field{ display:grid; gap:6px; margin-bottom:12px }
     label{ font-size:14px; font-weight:700 }
     input, select, textarea{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-family:inherit; font-size:16px }
     textarea{ min-height:80px }
-
     .summary-line{ display:flex; justify-content:space-between; margin:8px 0 }
     .total{ font-weight:900; font-size:20px }
-
     #payment-element{ padding:12px; border:1px solid var(--line); border-radius:10px }
     .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:700 }
     .btn:disabled{ opacity:.6; cursor:not-allowed }
     .muted-small{ color:var(--muted); font-size:12px }
-
     .cart-lines{ display:grid; gap:12px }
     .line{ display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center }
   </style>
@@ -115,6 +109,15 @@
 
           <h3 class="section-title">Paiement</h3>
           <div id="payment-element"></div>
+
+          <!-- ✅ Nouveau : enregistrer la carte -->
+          <div class="field">
+            <label style="display:flex; gap:8px; align-items:center">
+              <input id="saveCard" type="checkbox">
+              <span class="muted-small">Enregistrer cette carte pour mes prochains achats</span>
+            </label>
+          </div>
+
           <div class="field">
             <label style="display:flex; gap:8px; align-items:center">
               <input id="tos" type="checkbox" required>
@@ -135,7 +138,7 @@
         <div class="summary-line"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
         <div class="summary-line"><span>Livraison</span><span id="ship">Calculée après</span></div>
         <div class="summary-line total"><span>Total</span><span id="total">0 €</span></div>
-        <p class="muted-small">Le total final peut inclure les frais de port selon l’adresse et la méthode de livraison. Pour commencer, on autorise le montant des articles; la livraison est confirmée via email si nécessaire.</p>
+        <p class="muted-small">Le total final peut inclure les frais de port selon l’adresse et la méthode de livraison.</p>
       </aside>
     </div>
   </div>
@@ -157,9 +160,6 @@
     const subtotalEl = document.getElementById('subtotal');
     const totalEl = document.getElementById('total');
 
-    // Option: charger les produits pour calcul exact local (visuel)
-    // Le montant officiel est recalculé côté serveur.
-    let amount = 0;
     const cart = loadCart();
     cartEl.innerHTML = '';
     if (!cart.length){
@@ -172,24 +172,8 @@
         cartEl.appendChild(item);
       }
     }
-    // Le serveur calculera le vrai montant; on affiche 0€ ici par défaut
     subtotalEl.textContent = '—';
     totalEl.textContent = '—';
-  }
-
-  // Crée un PaymentIntent via notre backend, en envoyant aussi les infos client pour metadata
-  async function createIntentWithCustomer(){
-    const cart = loadCart();
-    const customer = collectCustomer();
-    if (!cart.length) throw new Error('Panier vide');
-
-    const res = await fetch(`${API_BASE}/api/create-payment-intent`, {
-      method: 'POST', headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ cart, email: customer.email, customer })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
-    return data.clientSecret;
   }
 
   function collectCustomer(){
@@ -207,6 +191,23 @@
       },
       shipping_method: document.getElementById('shipping_method').value
     };
+  }
+
+  // Crée un PaymentIntent via notre backend, en envoyant aussi les infos client
+  async function createIntentWithCustomer(){
+    const cart = loadCart();
+    const customer = collectCustomer();
+    if (!cart.length) throw new Error('Panier vide');
+
+    const saveCard = document.getElementById('saveCard').checked;
+
+    const res = await fetch(`${API_BASE}/api/create-payment-intent`, {
+      method: 'POST', headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ cart, email: customer.email, customer, saveCard })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    return data.clientSecret;
   }
 
   async function mountPaymentElement(){
@@ -241,7 +242,6 @@
       if (paymentIntent && paymentIntent.status === 'succeeded'){
         status.textContent = 'Merci ! Paiement réussi.';
         localStorage.setItem(cartKey, '[]');
-        // Redirection (si tu as une page merci)
         // location.href = '/merci.html?pi=' + paymentIntent.id;
       } else {
         status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu');
