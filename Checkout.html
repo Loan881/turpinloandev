@@ -145,8 +145,8 @@
 
 <script>
   // === CONFIG ===
-  const API_BASE = 'https://TON-PROJET.vercel.app'; // ← remplace par ton URL Vercel
-  const STRIPE_PK = 'pk_test_VOTRE_CLE_PUBLIQUE';   // ← remplace par ta clé publique Stripe (test)
+  const API_BASE = 'https://stripe-backend-ivory.vercel.app/'; // ← remplace par ton URL Vercel
+  const STRIPE_PK = 'pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL';   // ← remplace par ta clé publique Stripe (test)
 
   const stripe = Stripe(STRIPE_PK);
   let elements, paymentElement, clientSecret;
