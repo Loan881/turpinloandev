@@ -38,6 +38,28 @@
   </style>
 </head>
 <body>
+  <!-- Bouton temporaire pour simuler un panier et tester l’API -->
+<button id="addTestItem" style="position:fixed;bottom:12px;right:12px;z-index:9999">
+  + Panier de test
+</button>
+<script>
+  document.getElementById('addTestItem').onclick = async () => {
+    try {
+      // On charge ton catalogue pour créer un panier valide
+      const r = await fetch('https://loan881.github.io/loanturpin/products.json', { cache:'no-store' });
+      const products = await r.json();
+      const p = products[0];
+      const line = { id: p.id, qty: 1 };
+      if (p.variants?.[0]?.id) line.variantId = p.variants[0].id;
+      localStorage.setItem('cart', JSON.stringify([line]));
+      alert('Panier ajouté: ' + JSON.stringify([line]));
+      location.reload();
+    } catch (e) {
+      alert('Erreur ajout panier: ' + e.message);
+    }
+  };
+</script>
+
   <div class="container">
     <h1>Finaliser la commande</h1>
     <p class="muted">Renseigne tes informations, choisis la livraison et paie en toute sécurité.</p>
