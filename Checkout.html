@@ -151,7 +151,10 @@
   const stripe = Stripe(STRIPE_PK);
   let elements, paymentElement, clientSecret;
 
-  const € = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v/100);
+  const formatEUR = v => new Intl.NumberFormat('fr-FR', { 
+  style: 'currency', 
+  currency: 'EUR' 
+}).format(v / 100);
   const cartKey = 'cart';
   function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
 
