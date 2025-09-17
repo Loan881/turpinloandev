@@ -12,27 +12,18 @@
 
   <style>
     :root{
-      --bg:#ffffff;
-      --bg-alt:#f7f7f7;
-      --text:#111111;
-      --muted:#2d2d2d;
-      --border:#000000;
-      --accent:#1E155C;
-      --accent-2:#181451;
-      --tile: 70vh; /* hauteur du carousel (desktop) */
+      --bg:#ffffff; --text:#111111; --muted:#2d2d2d;
+      --border:#000000; --accent:#1E155C;
+      --tile: 66vh;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%; overflow-x:hidden}
-    body{
-      margin:0; font-family:"Playfair Display", serif;
-      color:var(--text); background:var(--bg); line-height:1.55;
-    }
+    body{margin:0; font-family:"Playfair Display", serif; color:var(--text); background:var(--bg); line-height:1.55;}
     img{max-width:100%; height:auto; display:block}
     a{color:inherit; text-decoration:none}
     .container{width:min(1200px, 92%); margin-inline:auto}
 
-    /* Topbar (identique style) */
+    /* Topbar */
     header{
       background:var(--bg);
       position:sticky; top:0; z-index:40;
@@ -44,82 +35,36 @@
     .back a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border:none; background:transparent; border-radius:8px; line-height:0; cursor:pointer}
     .back a:hover{opacity:.85}
     .back a svg{width:28px; height:28px; fill:currentColor}
-    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px; letter-spacing:.3px; white-space:nowrap; text-align:center}
+    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px}
 
-    /* Cart button (ajout) */
-    .cart{position:absolute; right:0; top:50%; transform:translateY(-50%)}
-    .cart a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border-radius:10px; border:1px solid rgba(0,0,0,.08)}
-    .cart svg{width:24px; height:24px}
-    .badge{ margin-left:8px; min-width:18px; height:18px; padding:0 6px; border-radius:9px; background:#000; color:#fff; font-size:11px; line-height:18px; text-align:center; font-weight:900; display:none }
+    /* Layout */
+    section{padding:32px 0}
+    .grid{display:grid; gap:24px; grid-template-columns: 1.2fr 0.8fr; align-items:start}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
 
-    /* HERO – 1:1 banner défilante, loop + drag */
-    .hero-marquee{position:relative; width:100vw; margin-left:calc(50% - 50vw); background:var(--bg)}
-    .marquee{
-      height:var(--tile); min-height:var(--tile);
-      overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
-      scrollbar-width:none; touch-action: pan-x; cursor:grab; user-select:none; overscroll-behavior:contain;
-    }
-    .marquee::-webkit-scrollbar{display:none}
-    .marquee.dragging{cursor:grabbing}
-    .track{display:flex; gap:0; align-items:center}
-    .group{display:flex; gap:0; flex-shrink:0}
-    .group img{height:var(--tile); width:var(--tile); aspect-ratio:1/1; object-fit:cover; flex:0 0 auto}
+    /* Gallery */
+    .hero{aspect-ratio:1/1; background:#f4f4f6; border:1px solid rgba(0,0,0,.08); border-radius:12px; overflow:hidden}
+    .thumbs{display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:10px}
+    .thumbs img{width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid rgba(0,0,0,.08); border-radius:8px; cursor:pointer}
 
-    /* Sections / typo */
-    section{padding:40px 0}
-    .h2{font-weight:700}
-    .rule{width:225px; height:1px; background:#000; margin:8px 0 14px}
-    .prose{font-weight:400}
-
-    /* Bloc texte + carte achat */
-    .block{
-      display:grid;
-      grid-template-columns: minmax(240px, 1fr) minmax(180px, 1fr);
-      align-items:start;
-      gap: clamp(16px, 4vw, 36px);
-      margin: clamp(36px, 6vw, 72px) 0;
-    }
-    .card{
-      background:var(--bg);
-      padding:14px 16px;
-      border-radius:12px;
-      border:1px solid rgba(0,0,0,.08);
-      font-size: clamp(0.98rem, 0.4vw + 0.9rem, 1.06rem);
-    }
-    .card h3{margin:0 0 6px 0; font-weight:700; font-size: clamp(1.15rem, 1.4vw + 0.9rem, 1.55rem)}
-    .media{display:flex; justify-content:center; align-items:center}
-    .media img{width: clamp(220px, 38vw, 280px); height:auto; border-radius:12px}
-
-    .buy .price{font-weight:800; font-size: clamp(1.2rem, 1.2vw + 1rem, 1.6rem); margin:8px 0 12px}
-    .field{display:grid; gap:6px; margin:8px 0}
-    .field label{font-weight:700; font-size:14px}
-    .field select, .field input{
-      border:1px solid rgba(0,0,0,.12); border-radius:10px; padding:10px 12px; font:inherit; background:#fff
-    }
-    .cta{display:flex; gap:10px; align-items:center; margin-top:12px}
-    .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:14px 18px; border-radius:10px; font-size:14px; cursor:pointer}
-    .button:hover{filter:brightness(0.96)}
-
-    /* Footer (identique style) */
-    .site-footer{ padding: 20px; background:#fff }
-    .site-footer .divider{ background:#000; opacity:.4 }
-    .footer-top{ display:flex; gap:20px; justify-content:space-around; align-items:flex-start; padding: 10px 0 20px }
-    .footer-title{ font-weight: 700; font-size: 18px; margin: 6px 0 }
-    .footer-links{ display:grid; gap:12px; margin-top:14px }
-    .footer-contact{ width:min(800px, 100%); margin: 0 auto; text-align:center; padding: 0 20px 20px }
-    .footer-contact .line{ font-size: 16px; display:flex; gap:8px; justify-content:center }
-    .credit{ width:220px; margin: 20px auto 0 }
-
-    /* Mobile */
-    @media (max-width: 768px){
-      :root{ --tile: 66.67vh; }
-      .block{ grid-template-columns: 1fr; gap: clamp(14px, 4.5vw, 24px); margin: clamp(28px, 8vw, 48px) 0; }
-      .media img{ width: min(100%, 92vw); max-width: 320px; }
-      .title{font-size:18px}
-    }
+    /* Card */
+    .card{background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:16px; display:grid; gap:10px}
+    .name{font-weight:700; font-size:24px}
+    .desc{color:var(--muted)}
+    .tags{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{font-size:12px; border:1px solid rgba(0,0,0,.12); padding:4px 8px; border-radius:999px}
+    .price{font-weight:800; font-size:20px}
+    .field{display:grid; gap:6px}
+    .field label{font-weight:600; font-size:14px}
+    select,input{border:1px solid rgba(0,0,0,.12); border-radius:10px; padding:10px 12px; font:inherit}
+    .row{display:grid; grid-template-columns:1fr 180px; gap:12px; align-items:end}
+    .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
+    .muted{color:var(--muted); font-size:12px}
+    .status{padding:10px; border:1px dashed #bbb; border-radius:10px; font-size:12px; display:none}
   </style>
 </head>
 <body>
+
   <!-- Top Bar -->
   <header>
     <div class="container topbar">
@@ -128,106 +73,67 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </a>
       </div>
-      <h1 class="title" id="pageTitle">Produit</h1>
-      <div class="cart">
-        <a href="panier.html" aria-label="Panier">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h14l-1.6 9.5H9.2L7 6zm0 0L5.5 3H3"/><circle cx="10" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/></svg>
-          <span id="cartBadge" class="badge">0</span>
-        </a>
-      </div>
+      <h1 class="title">Fiche produit</h1>
     </div>
   </header>
 
-  <!-- HERO / SLIDING 1:1 BANNER (rempli en JS avec les images du produit) -->
-  <div class="hero-marquee" aria-label="Bannière d’images 1:1">
-    <div class="marquee" id="marquee">
-      <div class="track" id="track">
-        <div class="group" id="group-source"><!-- images injectées ici --></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENU PRODUIT -->
   <section>
     <div class="container">
-      <h2 class="h2" id="prodName">Nom du produit</h2>
-      <div class="rule"></div>
-      <p class="prose" id="prodDesc">—</p>
+      <div id="err" class="status"></div>
 
-      <!-- Bloc achat + visuel secondaire -->
-      <div class="block">
-        <div class="card buy">
-          <h3>Commander</h3>
-          <div class="price" id="prodPrice">—</div>
+      <div class="grid" id="grid" style="display:none">
+        <div>
+          <div class="hero"><img id="hero" alt=""></div>
+          <div id="thumbs" class="thumbs"></div>
+        </div>
 
-          <div class="field">
+        <aside class="card">
+          <div class="name" id="name">—</div>
+          <div class="desc" id="desc"></div>
+          <div class="tags" id="tags"></div>
+          <div class="price" id="price">—</div>
+
+          <div class="field" id="variantField">
             <label for="variant">Variante</label>
             <select id="variant"></select>
           </div>
 
-          <div class="field">
-            <label for="qty">Quantité</label>
-            <input id="qty" type="number" min="1" value="1">
+          <div class="row">
+            <div class="field">
+              <label for="qty">Quantite</label>
+              <input id="qty" type="number" min="1" value="1" />
+            </div>
+            <button id="add" class="button" type="button">Ajouter au panier</button>
           </div>
 
-          <div class="cta">
-            <button id="addToCart" class="button" type="button">Ajouter au panier</button>
-            <span id="status" class="prose" style="font-size:13px;color:var(--muted)"></span>
-          </div>
-        </div>
-
-        <div class="media">
-          <img id="sideImage" src="" alt="">
-        </div>
+          <div class="muted">Paiement sécurisé sur la page panier/checkout.</div>
+        </aside>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer id="contact" class="site-footer" role="contentinfo">
-    <hr class="divider" aria-hidden="true">
-    <div class="footer-top">
-      <div class="col">
-        <h5 class="footer-title">Page</h5>
-        <hr class="divider w30" aria-hidden="true">
-        <nav class="footer-links" aria-label="Footer navigation">
-          <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
-          <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
-          <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
-          <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
-        </nav>
-      </div>
-      <div class="col">
-        <h5 class="footer-title">Social Media</h5>
-        <hr class="divider w82" aria-hidden="true">
-        <div class="social-lines">
-          <div class="line"><span>Instagram :</span> <a href="https://instagram.com/turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
-          <div class="line"><span>TikTok :</span> <a href="https://tiktok.com/@turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-contact">
-      <h5 class="footer-title">Contact Me</h5>
-      <hr class="divider" aria-hidden="true">
-      <p class="line"><span>E-Mail :</span> <a href="mailto:t.loan.contact@gmail.com">t.loan.contact@gmail.com</a></p>
-      <div class="credit">
-        <hr class="divider thin" aria-hidden="true">
-        <p>© 2025 TURPIN Loan</p>
-      </div>
-    </div>
-  </footer>
-
   <script>
-    /* ===== Données DEMO (tu pourras brancher data/products.json plus tard) ===== */
-    const PRODUCTS = [
+    // ===== Utilitaires =====
+    const $ = (id) => document.getElementById(id);
+    const euro = (v) => new Intl.NumberFormat("fr-FR", { style:"currency", currency:"EUR" }).format((v||0)/100);
+    function showError(msg){
+      const E = $("err"); E.style.display="block"; E.textContent = String(msg || "Erreur inconnue");
+    }
+
+    // ===== Panier (localStorage) =====
+    const CART_KEY = "cart";
+    function readCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||"[]"); }catch{ return []; } }
+    function writeCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+
+    // ===== Données (fallback simple, images placeholders) =====
+    const FALLBACK = [
       {
         id:"tee-classic",
         name:"T-shirt Classic",
-        description:"Coton 100% filé à l’anneau, coupe unisexe. Impression durable. Idéal pour un look casual.",
-        images:[1,2,3,4,5,6].map(n=>`https://picsum.photos/seed/tee${n}/1000/1000`),
-        price:1990,
-        currency:"EUR",
+        description:"Coton 100% file a l'anneau, coupe unisexe. Impression durable.",
+        images:["https://picsum.photos/seed/tee1/1000/1000","https://picsum.photos/seed/tee2/1000/1000","https://picsum.photos/seed/tee3/1000/1000"],
+        price:1990, currency:"EUR",
+        tags:["T-shirt","Unisexe","Coton"],
         variants:[
           {id:"blanc-s", label:"Blanc / S", price:1990},
           {id:"noir-m",  label:"Noir / M",  price:2090}
@@ -236,10 +142,10 @@
       {
         id:"hoodie-premium",
         name:"Hoodie Premium",
-        description:"Molleton doux, capuche doublée et poche kangourou. Parfait pour les soirées fraîches.",
-        images:[1,2,3,4].map(n=>`https://picsum.photos/seed/hoodie${n}/1000/1000`),
-        price:3990,
-        currency:"EUR",
+        description:"Molleton doux, capuche doublee et poche kangourou.",
+        images:["https://picsum.photos/seed/hood1/1000/1000","https://picsum.photos/seed/hood2/1000/1000"],
+        price:3990, currency:"EUR",
+        tags:["Hoodie","Confort"],
         variants:[
           {id:"noir-m", label:"Noir / M", price:3990},
           {id:"gris-m", label:"Gris / M", price:4090}
@@ -248,151 +154,91 @@
       {
         id:"mug-fun",
         name:"Mug Fun",
-        description:"Céramique 325 ml, compatible lave-vaisselle. Impression haute qualité.",
-        images:[1,2,3].map(n=>`https://picsum.photos/seed/mug${n}/1000/1000`),
-        price:1490,
-        currency:"EUR",
+        description:"Ceramique 325 ml, impression HQ.",
+        images:["https://picsum.photos/seed/mug1/1000/1000","https://picsum.photos/seed/mug2/1000/1000"],
+        price:1490, currency:"EUR",
+        tags:["Mug","Ceramique"],
         variants:[
           {id:"blanc-unique", label:"Blanc / Taille unique", price:1490}
         ]
       }
     ];
 
-    /* ===== Utilitaires ===== */
-    const formatEUR = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
-    const el = id => document.getElementById(id);
-
-    // Panier
-    const CART_KEY = 'cart';
-    const loadCart = ()=>{ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); }catch{ return []; } };
-    const saveCart = c => localStorage.setItem(CART_KEY, JSON.stringify(c));
-    const cartCount = ()=> loadCart().reduce((n,l)=> n + Math.max(1, parseInt(l.qty||1,10)), 0);
-    function updateCartBadge(){
-      const n = cartCount();
-      const b = el('cartBadge');
-      if(n>0){ b.textContent = n; b.style.display='inline-block'; } else { b.style.display='none'; }
+    // Essaie de charger data/products.json, sinon fallback
+    async function loadProducts(){
+      try{
+        const r = await fetch("data/products.json");
+        if(!r.ok) throw 0;
+        const j = await r.json();
+        return Array.isArray(j) && j.length ? j : FALLBACK;
+      }catch{
+        return FALLBACK;
+      }
     }
 
-    /* ===== Hero marquee (mêmes comportements que TAOG) ===== */
-    function initMarquee(images){
-      const marquee = el('marquee');
-      const track   = el('track');
-      const source  = el('group-source');
-      if(!marquee || !track || !source) return;
+    // ===== Page =====
+    (async function init(){
+      try{
+        const all = await loadProducts();
+        const id = new URLSearchParams(location.search).get("id") || "tee-classic";
+        const product = all.find(p => p.id === id) || all[0];
 
-      // injecte les images du produit
-      source.innerHTML = '';
-      images.forEach((src,i)=>{
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = 'Visuel ' + (i+1);
-        img.decoding = 'async';
-        if(i===0){ img.setAttribute('fetchpriority','high'); }
-        source.appendChild(img);
-      });
+        // Affichage
+        $("grid").style.display = "grid";
+        $("name").textContent = product.name;
+        $("desc").textContent = product.description || "";
+        $("tags").innerHTML = (product.tags||[]).map(t => '<span class="tag">'+t+'</span>').join("");
+        $("price").textContent = euro(product.price);
 
-      // clone pour la boucle infinie
-      for(let i=0;i<2;i++){ const clone=source.cloneNode(true); clone.setAttribute('aria-hidden','true'); track.appendChild(clone); }
+        // Galerie
+        const hero = $("hero");
+        hero.src = (product.images && product.images[0]) || "https://picsum.photos/seed/hero/1000/1000";
+        hero.alt = product.name;
+        const thumbs = $("thumbs"); thumbs.innerHTML = "";
+        (product.images||[]).slice(0,6).forEach(src=>{
+          const im = new Image(); im.src = src; im.alt = "";
+          im.addEventListener("click", ()=>{ hero.src = src; });
+          thumbs.appendChild(im);
+        });
 
-      let gw = 0;
-      function measure(){ gw = source.getBoundingClientRect().width; }
-      function center(){
-        measure();
-        const first = source.querySelector('img');
-        if(!first){ marquee.scrollLeft = gw; return; }
-        const firstW = first.getBoundingClientRect().width;
-        const viewW  = marquee.clientWidth;
-        marquee.scrollLeft = gw + (firstW/2) - (viewW/2);
+        // Variantes
+        const select = $("variant");
+        const vf = $("variantField");
+        let current = null;
+        select.innerHTML = "";
+        if (Array.isArray(product.variants) && product.variants.length){
+          product.variants.forEach(v => select.add(new Option(v.label, v.id)));
+          current = product.variants[0];
+          select.addEventListener("change", ()=>{
+            current = product.variants.find(v => v.id === select.value) || current;
+            $("price").textContent = euro((current && current.price != null) ? current.price : product.price);
+          });
+        } else {
+          vf.style.display = "none";
+        }
+
+        // Ajouter au panier
+        $("add").addEventListener("click", ()=>{
+          const qty = Math.max(1, parseInt(($("qty").value||"1"), 10) || 1);
+          const line = {
+            id: product.id,
+            name: product.name,
+            price: (current && current.price != null) ? current.price : product.price,
+            currency: (product.currency || "EUR").toUpperCase(),
+            image: hero.src,
+            option: current ? current.label : "",
+            qty: qty
+          };
+          const cart = readCart();
+          const i = cart.findIndex(l => l.id === line.id && (l.option||"") === (line.option||""));
+          if (i >= 0) cart[i].qty += qty; else cart.push(line);
+          writeCart(cart);
+          location.href = "panier.html";
+        });
+
+      }catch(err){
+        showError(err && err.message ? err.message : err);
       }
-      function wrap(){
-        if(gw<=1) return;
-        while(marquee.scrollLeft < gw*0.25) marquee.scrollLeft += gw;
-        while(marquee.scrollLeft > gw*1.75) marquee.scrollLeft -= gw;
-      }
-      function waitImages(){
-        const imgs = source.querySelectorAll('img');
-        return Promise.all([...imgs].map(img => img.complete ? Promise.resolve() : new Promise(res=>{
-          img.addEventListener('load',res,{once:true}); img.addEventListener('error',res,{once:true});
-        })));
-      }
-
-      let dragging=false,startX=0,startScroll=0,autoplay=true;
-      const SPEED = 0.6;
-      function step(){ if(autoplay && !dragging){ marquee.scrollLeft += SPEED; wrap(); } requestAnimationFrame(step); }
-      function down(e){ dragging=true; autoplay=false; marquee.classList.add('dragging'); marquee.setPointerCapture?.(e.pointerId); startX=e.clientX; startScroll=marquee.scrollLeft; }
-      function move(e){ if(!dragging) return; const dx=startX-e.clientX; marquee.scrollLeft=startScroll+dx; wrap(); }
-      function up(e){ if(!dragging) return; dragging=false; marquee.classList.remove('dragging'); marquee.releasePointerCapture?.(e.pointerId); setTimeout(()=>autoplay=true,600); }
-
-      marquee.addEventListener('pointerdown',down);
-      marquee.addEventListener('pointermove',move);
-      marquee.addEventListener('pointerup',up);
-      marquee.addEventListener('pointercancel',up);
-      marquee.addEventListener('pointerleave',e=>{ if(dragging) up(e); });
-      marquee.addEventListener('mouseenter',()=>autoplay=false);
-      marquee.addEventListener('mouseleave',()=>autoplay=true);
-      marquee.addEventListener('wheel',(e)=>{ const d=Math.abs(e.deltaY)>Math.abs(e.deltaX)?e.deltaY:e.deltaX; marquee.scrollLeft+=d; wrap(); e.preventDefault(); },{passive:false});
-      window.addEventListener('resize', center);
-
-      waitImages().then(()=>{ center(); requestAnimationFrame(step); });
-      setTimeout(()=>{ if(gw===0){ center(); requestAnimationFrame(step); } },1200);
-    }
-
-    /* ===== Initialisation page produit ===== */
-    (function init(){
-      updateCartBadge();
-
-      // Sélection du produit
-      const params = new URLSearchParams(location.search);
-      const productId = params.get('id') || 'tee-classic';
-      const product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
-
-      // Topbar / titres
-      document.title = product.name + ' — Produit';
-      el('pageTitle').textContent = product.name;
-      el('prodName').textContent  = product.name;
-      el('prodDesc').textContent  = product.description;
-
-      // Hero
-      initMarquee(product.images);
-
-      // Visuel secondaire
-      el('sideImage').src = product.images[1] || product.images[0];
-      el('sideImage').alt = product.name + ' — détail';
-
-      // Prix + variantes
-      const priceEl = el('prodPrice');
-      const select  = el('variant');
-      select.innerHTML = '';
-      product.variants.forEach(v => select.add(new Option(v.label, v.id)));
-      let selected = product.variants[0];
-      priceEl.textContent = formatEUR(selected?.price ?? product.price);
-
-      select.onchange = () => {
-        selected = product.variants.find(v => v.id === select.value) || selected;
-        priceEl.textContent = formatEUR(selected?.price ?? product.price);
-      };
-
-      // Ajouter au panier
-      el('addToCart').addEventListener('click', () => {
-        const qty = Math.max(1, parseInt(el('qty').value || '1', 10));
-        const line = {
-          id: product.id,
-          name: product.name,
-          price: (selected && selected.price != null ? selected.price : product.price),
-          currency: (product.currency || 'EUR').toUpperCase(),
-          image: product.images[0],
-          option: selected ? selected.label : '',
-          qty
-        };
-        const cart = loadCart();
-        const idx = cart.findIndex(l => l.id===line.id && (l.option||'')===(line.option||''));
-        if (idx>=0) cart[idx].qty += qty; else cart.push(line);
-        saveCart(cart);
-        updateCartBadge();
-        // Petit feedback puis redirection
-        el('status').textContent = 'Ajouté ! Redirection…';
-        setTimeout(()=>{ location.href = 'panier.html'; }, 300);
-      });
     })();
   </script>
 </body>
