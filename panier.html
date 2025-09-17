@@ -12,132 +12,58 @@
 
   <style>
     :root{
-      --bg:#ffffff;
-      --bg-alt:#f7f7f7;
-      --text:#111111;
-      --muted:#2d2d2d;
-      --border:#000000;
-      --accent:#1E155C;
-      --accent-2:#181451;
+      --bg:#ffffff; --text:#111; --muted:#2d2d2d; --accent:#1E155C;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%; overflow-x:hidden}
-    body{
-      margin:0; font-family:"Playfair Display", serif;
-      color:var(--text); background:var(--bg); line-height:1.55;
-    }
-    img{max-width:100%; height:auto; display:block}
+    body{margin:0; font-family:"Playfair Display", serif; color:var(--text); background:var(--bg); line-height:1.55;}
+    img{max-width:100%; display:block}
     a{color:inherit; text-decoration:none}
     .container{width:min(1200px, 92%); margin-inline:auto}
 
-    /* Topbar (identique style TAOG) */
-    header{
-      background:var(--bg);
-      position:sticky; top:0; z-index:40;
-      border-bottom:1px solid rgba(0,0,0,.05);
-      backdrop-filter:saturate(160%) blur(6px);
-    }
+    header{background:#fff; position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(0,0,0,.05); backdrop-filter:saturate(160%) blur(6px);}
     .topbar{position:relative; display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0; min-height:60px}
     .back{position:absolute; left:0; top:50%; transform:translateY(-50%)}
-    .back a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border:none; background:transparent; border-radius:8px; line-height:0; cursor:pointer}
-    .back a:hover{opacity:.85}
-    .back a svg{width:28px; height:28px; fill:currentColor}
-    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px; letter-spacing:.3px; white-space:nowrap; text-align:center}
-
-    /* Badge panier (optionnel sur cette page) */
+    .back a{display:inline-flex; padding:12px; border-radius:8px}
+    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px}
     .cart{position:absolute; right:0; top:50%; transform:translateY(-50%)}
-    .cart a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border-radius:10px; border:1px solid rgba(0,0,0,.08)}
-    .cart svg{width:24px; height:24px}
     .badge{ margin-left:8px; min-width:18px; height:18px; padding:0 6px; border-radius:9px; background:#000; color:#fff; font-size:11px; line-height:18px; text-align:center; font-weight:900; display:none }
 
-    /* Sections / titres */
     section{padding:32px 0}
     .h2{font-weight:700}
     .rule{width:225px; height:1px; background:#000; margin:8px 0 18px}
     .muted{color:var(--muted)}
 
-    /* Layout panier */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr minmax(260px, 360px);
-      gap: clamp(16px, 3.5vw, 28px);
-      align-items:start;
-    }
-    @media (max-width: 880px){
-      .grid{ grid-template-columns: 1fr; }
-    }
+    .grid{ display:grid; grid-template-columns: 1fr minmax(260px, 360px); gap: clamp(16px, 3.5vw, 28px); align-items:start; }
+    @media (max-width: 880px){ .grid{ grid-template-columns:1fr; } }
 
-    /* Liste d'articles */
     .list{display:grid; gap:12px}
-    .row{
-      display:grid; grid-template-columns: auto 1fr auto; gap:12px;
-      align-items:center;
-      background:var(--bg);
-      border:1px solid rgba(0,0,0,.08);
-      border-radius:12px; padding:10px;
-    }
+    .row{display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:10px; background:#fff}
     .thumb{width:92px; height:92px; border-radius:10px; overflow:hidden; background:#f4f4f6; border:1px solid rgba(0,0,0,.06)}
     .thumb img{width:100%; height:100%; object-fit:cover}
-
     .meta{display:grid; gap:6px}
     .name{font-weight:700}
     .opt{font-size:.95rem; color:var(--muted)}
-
     .act{display:grid; gap:8px; justify-items:end}
-    .qty{
-      display:inline-grid; grid-auto-flow:column; gap:8px; align-items:center;
-      border:1px solid rgba(0,0,0,.12); border-radius:999px; padding:4px 8px;
-    }
-    .qty button{
-      width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,0,0,.12);
-      background:#fff; cursor:pointer;
-    }
+    .qty{display:inline-grid; grid-auto-flow:column; gap:8px; align-items:center; border:1px solid rgba(0,0,0,.12); border-radius:999px; padding:4px 8px;}
+    .qty button{ width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:#fff; cursor:pointer }
     .price{font-weight:800}
     .rm{background:transparent; border:none; color:#999; cursor:pointer; font-size:14px; text-decoration:underline}
 
-    /* Résumé */
-    .summary{
-      position:sticky; top:84px;
-      background:var(--bg);
-      border:1px solid rgba(0,0,0,.08);
-      border-radius:12px;
-      padding:14px 16px;
-      display:grid; gap:10px;
-    }
+    .summary{ position:sticky; top:84px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:14px 16px; display:grid; gap:10px }
     .rowline{display:flex; justify-content:space-between; gap:12px}
     .total{font-weight:800; font-size: clamp(1.05rem, 1vw + 1rem, 1.25rem)}
     .buttons{display:grid; gap:10px; margin-top:6px}
-    .button{
-      display:inline-block; background:var(--accent); color:#fff;
-      border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer
-    }
-    .ghost{
-      display:inline-block; background:#fff; color:#111;
-      border:1px solid rgba(0,0,0,.12); padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer
-    }
+    .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
+    .ghost{display:inline-block; background:#fff; color:#111; border:1px solid rgba(0,0,0,.12); padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
 
-    /* Vide */
-    .empty{
-      text-align:center;
-      border:1px dashed rgba(0,0,0,.18);
-      border-radius:12px;
-      padding:28px;
-    }
+    .empty{text-align:center; border:1px dashed rgba(0,0,0,.18); border-radius:12px; padding:28px}
 
-    /* Footer (identique TAOG) */
-    .site-footer{ padding: 20px; background:#fff }
-    .site-footer .divider{ background:#000; opacity:.4 }
-    .footer-top{ display:flex; gap:20px; justify-content:space-around; align-items:flex-start; padding: 10px 0 20px }
-    .footer-title{ font-weight: 700; font-size: 18px; margin: 6px 0 }
-    .footer-links{ display:grid; gap:12px; margin-top:14px }
-    .footer-contact{ width:min(800px, 100%); margin: 0 auto; text-align:center; padding: 0 20px 20px }
-    .footer-contact .line{ font-size: 16px; display:flex; gap:8px; justify-content:center }
-    .credit{ width:220px; margin: 20px auto 0 }
-
-    @media (max-width: 768px){
-      .title{font-size:18px}
-    }
+    /* Debug (retire-le quand tout marche) */
+    .debug{ position:fixed; right:14px; bottom:14px; z-index:50; width:min(380px, 92vw); background:#fff; border:1px dashed #bbb; border-radius:12px; padding:10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .debug h4{ margin:0 0 6px; font-size:13px }
+    .debug pre{ margin:0; white-space:pre-wrap; word-break:break-word; max-height:200px; overflow:auto; background:#fafafa; padding:8px; border-radius:8px }
+    .debug .row{ display:flex; gap:8px; margin-bottom:8px }
   </style>
 </head>
 <body>
@@ -146,13 +72,13 @@
   <header>
     <div class="container topbar">
       <div class="back">
-        <a href="produits.html" aria-label="Retour" title="Retour">
+        <a href="/loanturpin/produits.html" aria-label="Retour" title="Retour">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </a>
       </div>
       <h1 class="title">Panier</h1>
       <div class="cart">
-        <a href="panier.html" aria-label="Panier">
+        <a href="/loanturpin/panier.html" aria-label="Panier">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h14l-1.6 9.5H9.2L7 6zm0 0L5.5 3H3"/><circle cx="10" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/></svg>
           <span id="cartBadge" class="badge">0</span>
         </a>
@@ -164,19 +90,18 @@
   <section>
     <div class="container">
       <div class="grid">
-        <!-- Liste articles -->
         <div>
           <h2 class="h2">Vos articles</h2>
           <div class="rule"></div>
 
           <div id="empty" class="empty" style="display:none">
-            Votre panier est vide. <a class="button" href="produits.html" style="margin-left:10px">Découvrir les produits</a>
+            Votre panier est vide.
+            <a class="button" href="/loanturpin/produits.html" style="margin-left:10px">Découvrir les produits</a>
           </div>
 
           <div id="list" class="list" aria-live="polite"></div>
         </div>
 
-        <!-- Résumé -->
         <aside class="summary" aria-label="Récapitulatif">
           <div class="rowline"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
           <div class="rowline muted"><span>Frais de port</span><span>Calculés au paiement</span></div>
@@ -184,7 +109,7 @@
 
           <div class="buttons">
             <button id="clear" class="ghost" type="button">Vider le panier</button>
-            <a class="button" href="checkout.html">Aller au paiement</a>
+            <a class="button" href="/loanturpin/checkout.html">Aller au paiement</a>
           </div>
 
           <p class="muted" style="font-size:.95rem; margin:8px 0 0">
@@ -195,7 +120,7 @@
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- Footer (identique) -->
   <footer id="contact" class="site-footer" role="contentinfo">
     <hr class="divider" aria-hidden="true">
     <div class="footer-top">
@@ -230,23 +155,58 @@
     </div>
   </footer>
 
+  <!-- Debug helper (retire-le quand OK) -->
+  <div class="debug" id="dbg" hidden>
+    <div class="row">
+      <button id="seed">+ Ajouter un article de test</button>
+      <button id="refresh">↻ Refresh</button>
+      <button id="wipe">🗑️ Vider</button>
+    </div>
+    <h4>localStorage.cart</h4>
+    <pre id="dump"></pre>
+  </div>
+
   <script>
     /* ===== Utils & Panier ===== */
-    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
+    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((Number(v)||0)/100);
     const el = id => document.getElementById(id);
-
     const CART_KEY = 'cart';
-    const loadCart = ()=>{ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); }catch{ return []; } };
-    const saveCart = c => localStorage.setItem(CART_KEY, JSON.stringify(c));
-    const cartCount = ()=> loadCart().reduce((n,l)=> n + Math.max(1, parseInt(l.qty||1,10)), 0);
+
+    function safeArray(x){ return Array.isArray(x) ? x : []; }
+    function loadCart(){
+      try{
+        const raw = localStorage.getItem(CART_KEY);
+        const arr = JSON.parse(raw || '[]');
+        // normalisation des lignes
+        return safeArray(arr).map(l=>{
+          const qty = Math.max(1, parseInt(l?.qty ?? 1, 10));
+          const price = Math.round(Number(l?.price ?? 0)); // cents
+          return {
+            id: l?.id || l?.productId || 'unknown',
+            name: l?.name || l?.id || 'Article',
+            price,
+            currency: (l?.currency || 'EUR').toUpperCase(),
+            image: l?.image || 'https://picsum.photos/seed/placeholder/300/300',
+            option: l?.option || l?.variant || '',
+            qty
+          };
+        }).filter(l=>!!l.id);
+      }catch(e){
+        return [];
+      }
+    }
+    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); }
+    const cartCount = ()=> loadCart().reduce((n,l)=> n + (l.qty||1), 0);
+
     function updateBadge(){
       const n = cartCount(), b = el('cartBadge');
       if(n>0){ b.textContent=n; b.style.display='inline-block'; } else { b.style.display='none'; }
     }
+    function subtotal(c){ return c.reduce((s,l)=> s + (l.price*l.qty), 0); }
 
-    function computeSubtotal(lines){ return lines.reduce((s,l)=> s + (l.price*l.qty), 0); }
-
+    /* ===== Rendu ===== */
     function render(){
+      updateBadge();
       const list = el('list');
       const empty = el('empty');
       list.innerHTML = '';
@@ -255,7 +215,8 @@
       if(!cart.length){
         empty.style.display = 'block';
         el('subtotal').textContent = '0 €';
-        el('total').textContent = '0 €';
+        el('total').textContent    = '0 €';
+        dump(); // debug
         return;
       }
       empty.style.display = 'none';
@@ -264,48 +225,61 @@
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
-          <div class="thumb"><img src="${l.image || 'https://picsum.photos/seed/placeholder/300/300'}" alt=""></div>
+          <div class="thumb"><img src="${l.image}" alt=""></div>
           <div class="meta">
-            <div class="name">${l.name || l.id}</div>
+            <div class="name">${l.name}</div>
             ${l.option ? `<div class="opt">Variante : ${l.option}</div>` : ''}
             <button class="rm" data-i="${i}" aria-label="Retirer">Retirer</button>
           </div>
           <div class="act">
             <div class="qty">
               <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
-              <span>${l.qty || 1}</span>
+              <span>${l.qty}</span>
               <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
             </div>
-            <div class="price">${€((l.price||0) * (l.qty||1))}</div>
+            <div class="price">${€(l.price * l.qty)}</div>
           </div>
         `;
         list.appendChild(row);
       });
 
-      const subtotal = computeSubtotal(cart);
-      el('subtotal').textContent = €(subtotal);
-      el('total').textContent    = €(subtotal);
+      const st = subtotal(cart);
+      el('subtotal').textContent = €(st);
+      el('total').textContent    = €(st);
 
-      // Delegation actions
       list.onclick = (e)=>{
         const inc = e.target.closest('.inc');
         const dec = e.target.closest('.dec');
         const rm  = e.target.closest('.rm');
         const c = loadCart();
-        if(inc){ c[+inc.dataset.i].qty = (c[+inc.dataset.i].qty||1) + 1; saveCart(c); updateBadge(); render(); }
-        if(dec){ c[+dec.dataset.i].qty = Math.max(1, (c[+dec.dataset.i].qty||1)-1); saveCart(c); updateBadge(); render(); }
-        if(rm){  c.splice(+rm.dataset.i,1); saveCart(c); updateBadge(); render(); }
+        if(inc){ c[+inc.dataset.i].qty += 1; saveCart(c); render(); return; }
+        if(dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); return; }
+        if(rm){  c.splice(+rm.dataset.i,1); saveCart(c); render(); return; }
       };
+
+      dump(); // debug
     }
 
-    // Vider
-    el('clear').onclick = ()=>{ localStorage.setItem(CART_KEY, '[]'); updateBadge(); render(); };
+    /* ===== Actions globales ===== */
+    el('clear').onclick = ()=>{ localStorage.setItem(CART_KEY, '[]'); render(); };
+
+    // ---- DEBUG (enlève tout ce bloc quand c'est bon) ----
+    // Affiche le panneau debug si on est sur GitHub Pages
+    el('dbg').hidden = false;
+    function dump(){ el('dump').textContent = (localStorage.getItem(CART_KEY)||'[]'); }
+    el('refresh').onclick = dump;
+    el('wipe').onclick = ()=>{ localStorage.removeItem(CART_KEY); render(); };
+    el('seed').onclick = ()=>{
+      const c = loadCart();
+      c.push({
+        id:'demo-sku', name:'Article de test', price:1990, currency:'EUR',
+        image:'https://picsum.photos/seed/demo/600/600', option:'Démo', qty:1
+      });
+      saveCart(c); render();
+    };
 
     // Init
-    (function(){
-      updateBadge();
-      render();
-    })();
+    render();
   </script>
 </body>
 </html>
