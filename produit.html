@@ -3,39 +3,40 @@
 <head>
   <meta charset="utf-8">
   <title>Détail produit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    img { max-width: 300px; border-radius: 8px; }
-    .price { font-weight: bold; font-size: 20px; margin-top: 10px; }
-    button { padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+    img { max-width: 320px; border-radius: 8px; }
+    .price { font-weight: bold; font-size: 20px; margin: 10px 0; }
+    button { padding: 10px 16px; border-radius: 10px; border: 1px solid #ddd; background:#111; color:#fff; cursor:pointer; }
+    a { color: inherit; }
   </style>
 </head>
 <body>
-  <div id="product"></div>
+  <a href="produits.html">← Retour au catalogue</a>
+  <div id="product" style="margin-top:16px"></div>
 
   <script>
     async function init() {
       const params = new URLSearchParams(location.search);
       const id = params.get("id");
-      console.log("URL id =", id);
 
-      const res = await fetch('data/products.json');
+      // Charge le catalogue (chemin RELATIF pour GitHub Pages)
+      const res = await fetch("data/products.json");
       const products = await res.json();
-      console.log("Products =", products);
 
       const product = products.find(p => String(p.id) === String(id));
-
       const container = document.getElementById("product");
 
       if (!product) {
-        container.innerHTML = `<p><strong>Produit introuvable</strong> (id=${id})</p>`;
+        container.innerHTML = `<p><strong>Produit introuvable</strong> (id=${id || "—"})</p>`;
         return;
       }
 
       container.innerHTML = `
         <h1>${product.name}</h1>
         <img src="${product.image}" alt="${product.name}">
-        <p>${product.description}</p>
+        <p>${product.description || ""}</p>
         <div class="price">${(product.price/100).toFixed(2)} €</div>
         <button id="addCart">Ajouter au panier</button>
       `;
@@ -56,7 +57,8 @@
           });
         }
         localStorage.setItem("cart", JSON.stringify(cart));
-        alert("Produit ajouté au panier !");
+        // Redirige vers le panier immédiatement
+        window.location.href = "panier.html"; // ⚠️ pas de slash initial
       };
     }
 
@@ -64,3 +66,4 @@
   </script>
 </body>
 </html>
+
