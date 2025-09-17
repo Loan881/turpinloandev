@@ -5,7 +5,8 @@
     "description": "Coton 100%, coupe unisexe.",
     "price": 1990,
     "currency": "EUR",
-    "image": "/images/tee-classic.jpg"
+    "image": "https://picsum.photos/300/300?random=1"
+
   },
   {
     "id": "hoodie-premium",
