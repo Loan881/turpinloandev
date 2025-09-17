@@ -155,8 +155,9 @@
   // === CONFIG ===
   // ➜ Laisse API_BASE vide pour cibler ton propre domaine (ex: ton-site.vercel.app)
   //    Si tu veux cibler un backend externe, mets l'URL complète (https://...)
-  const API_BASE = 'https://ton-backend.vercel.app'; // ← remplace par l'URL de ton backend Vercel
-  const STRIPE_PK = 'pk_test_************************'; // ⚠️ mets ta clé publique TEST ici
+  const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ← remplace par l'URL de ton backend Vercel
+  await apiPost('/api/create-payment-intent', {...});
+  const STRIPE_PK = 'pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL'; // ⚠️ mets ta clé publique TEST ici
 
   const stripe = Stripe(STRIPE_PK);
   let elements, paymentElement, clientSecret;
