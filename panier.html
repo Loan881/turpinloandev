@@ -2,170 +2,211 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Favicons (optionnel) -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="favicon-16.png" sizes="16x16">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-  <!-- Police Playfair Display -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 
   <style>
-    :root{ --bg:#0f1014; --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --accent:#222; --radius:16px; --container: 1100px; --pad-x: 20px; }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{ margin:0; font-family: "Playfair Display", serif; background: var(--paper); color: var(--ink); }
-    img{ max-width:100%; display:block; }
-    a{ color: inherit; text-decoration: none; }
-    .container{ width:100%; max-width: var(--container); margin: 0 auto; padding-left: var(--pad-x); padding-right: var(--pad-x); }
+    :root{
+      --bg:#ffffff;
+      --bg-alt:#f7f7f7;
+      --text:#111111;
+      --muted:#2d2d2d;
+      --border:#000000;
+      --accent:#1E155C;
+      --accent-2:#181451;
+    }
 
-    /* Appbar */
-    .appbar{ position:sticky; top:0; z-index:20; background: var(--paper); border-bottom: 1px solid var(--line); width: 100%; }
-    .bar{ height:64px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 var(--pad-x); }
-    .title{ font-weight: 600; font-size: 22px; text-align:center }
-    .icon-btn{ width:44px; height:44px; display:inline-grid; place-items:center; border-radius:50%; border:1px solid transparent; cursor:pointer; }
-    .icon-btn:hover{ background:#f2f3f7; border-color:#e6e8ef }
-    .icon-btn svg{ width:22px; height:22px; fill:#000 }
-    .left{ display:flex; gap:6px; align-items:center }
-    .right{ justify-self:end }
+    *{box-sizing:border-box}
+    html,body{height:100%; overflow-x:hidden}
+    body{
+      margin:0; font-family:"Playfair Display", serif;
+      color:var(--text); background:var(--bg); line-height:1.55;
+    }
+    img{max-width:100%; height:auto; display:block}
+    a{color:inherit; text-decoration:none}
+    .container{width:min(1200px, 92%); margin-inline:auto}
 
-    /* Drawer */
-    .drawer{ position:fixed; inset:0 auto 0 0; width:320px; background:#fff; border-right:1px solid var(--line); transform: translateX(-100%); transition: transform .25s ease; z-index:30; }
-    #drawer-toggle:checked ~ .drawer{ transform: translateX(0) }
-    #drawer-toggle:checked ~ .backdrop{ opacity:1; pointer-events:auto }
-    .drawer-inner{ height:100%; padding:20px; display:flex; flex-direction:column; }
-    .brand{ font-weight: 900; font-size: 32px; margin:60px 0 12px }
-    .divider{ border:0; height:1px; background:#000; opacity:.35; margin:10px 0 }
-    .drawer-nav{ display:grid; gap:20px; margin:40px 0 }
-    .nav-link {font-weight: 600; font-size: 24px; line-height: 1.3;}
-    .drawer-spacer{ flex:1 }
-    .social-lines{ display:grid; gap:10px; font-size: 16px }
-    .backdrop{ position:fixed; inset:0; background: rgba(0,0,0,.25); z-index:25; opacity:0; pointer-events:none; transition:.25s; }
+    /* Topbar (identique style TAOG) */
+    header{
+      background:var(--bg);
+      position:sticky; top:0; z-index:40;
+      border-bottom:1px solid rgba(0,0,0,.05);
+      backdrop-filter:saturate(160%) blur(6px);
+    }
+    .topbar{position:relative; display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0; min-height:60px}
+    .back{position:absolute; left:0; top:50%; transform:translateY(-50%)}
+    .back a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border:none; background:transparent; border-radius:8px; line-height:0; cursor:pointer}
+    .back a:hover{opacity:.85}
+    .back a svg{width:28px; height:28px; fill:currentColor}
+    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px; letter-spacing:.3px; white-space:nowrap; text-align:center}
 
-    /* Panier */
-    main{ padding: 30px 0 60px; }
-    .grid{ display:grid; grid-template-columns: 1fr; gap: 24px; }
-    @media (min-width: 950px){ .grid{ grid-template-columns: 1.4fr 1fr; } }
+    /* Badge panier (optionnel sur cette page) */
+    .cart{position:absolute; right:0; top:50%; transform:translateY(-50%)}
+    .cart a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border-radius:10px; border:1px solid rgba(0,0,0,.08)}
+    .cart svg{width:24px; height:24px}
+    .badge{ margin-left:8px; min-width:18px; height:18px; padding:0 6px; border-radius:9px; background:#000; color:#fff; font-size:11px; line-height:18px; text-align:center; font-weight:900; display:none }
 
-    .cart{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-    .cart-header, .cart-line{ display:grid; grid-template-columns: 1fr 120px 110px 40px; gap:10px; align-items:center; padding:12px; }
-    .cart-header{ background:#fafbfe; font-weight:700; }
-    .cart-line{ border-top:1px solid var(--line); }
-    .cart-item{ display:flex; gap:12px; align-items:center; }
-    .thumb{ width:80px; height:80px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:#fff; flex:0 0 auto; }
-    .thumb img{ width:100%; height:100%; object-fit:cover; }
-    .name{ font-weight:700; }
-    .muted{ color:var(--muted); font-size:14px; }
+    /* Sections / titres */
+    section{padding:32px 0}
+    .h2{font-weight:700}
+    .rule{width:225px; height:1px; background:#000; margin:8px 0 18px}
+    .muted{color:var(--muted)}
 
-    .qty{ display:inline-flex; gap:8px; align-items:center; }
-    .qty button{ width:28px; height:28px; border-radius:6px; background:#f2f3f7; border:1px solid #e6e8ef; cursor:pointer; }
+    /* Layout panier */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr minmax(260px, 360px);
+      gap: clamp(16px, 3.5vw, 28px);
+      align-items:start;
+    }
+    @media (max-width: 880px){
+      .grid{ grid-template-columns: 1fr; }
+    }
 
-    .rm{ background:transparent; border:0; font-size:20px; color:#999; cursor:pointer; }
+    /* Liste d'articles */
+    .list{display:grid; gap:12px}
+    .row{
+      display:grid; grid-template-columns: auto 1fr auto; gap:12px;
+      align-items:center;
+      background:var(--bg);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:12px; padding:10px;
+    }
+    .thumb{width:92px; height:92px; border-radius:10px; overflow:hidden; background:#f4f4f6; border:1px solid rgba(0,0,0,.06)}
+    .thumb img{width:100%; height:100%; object-fit:cover}
 
-    .summary{ border:1px solid var(--line); border-radius:12px; padding:16px; display:grid; gap:12px; align-self:start; position:sticky; top:86px; }
-    .row{ display:flex; justify-content:space-between; }
-    .total{ font-weight:800; font-size:20px; }
+    .meta{display:grid; gap:6px}
+    .name{font-weight:700}
+    .opt{font-size:.95rem; color:var(--muted)}
 
-    .btn{ border:1px solid var(--line); background:#111; color:#fff; padding:12px 14px; border-radius:10px; cursor:pointer; text-align:center; }
-    .btn.secondary{ background:#fff; color:#111; }
+    .act{display:grid; gap:8px; justify-items:end}
+    .qty{
+      display:inline-grid; grid-auto-flow:column; gap:8px; align-items:center;
+      border:1px solid rgba(0,0,0,.12); border-radius:999px; padding:4px 8px;
+    }
+    .qty button{
+      width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,0,0,.12);
+      background:#fff; cursor:pointer;
+    }
+    .price{font-weight:800}
+    .rm{background:transparent; border:none; color:#999; cursor:pointer; font-size:14px; text-decoration:underline}
 
-    .empty{ text-align:center; padding:40px; border:1px dashed var(--line); border-radius:12px; }
+    /* Résumé */
+    .summary{
+      position:sticky; top:84px;
+      background:var(--bg);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:12px;
+      padding:14px 16px;
+      display:grid; gap:10px;
+    }
+    .rowline{display:flex; justify-content:space-between; gap:12px}
+    .total{font-weight:800; font-size: clamp(1.05rem, 1vw + 1rem, 1.25rem)}
+    .buttons{display:grid; gap:10px; margin-top:6px}
+    .button{
+      display:inline-block; background:var(--accent); color:#fff;
+      border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer
+    }
+    .ghost{
+      display:inline-block; background:#fff; color:#111;
+      border:1px solid rgba(0,0,0,.12); padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer
+    }
+
+    /* Vide */
+    .empty{
+      text-align:center;
+      border:1px dashed rgba(0,0,0,.18);
+      border-radius:12px;
+      padding:28px;
+    }
+
+    /* Footer (identique TAOG) */
+    .site-footer{ padding: 20px; background:#fff }
+    .site-footer .divider{ background:#000; opacity:.4 }
+    .footer-top{ display:flex; gap:20px; justify-content:space-around; align-items:flex-start; padding: 10px 0 20px }
+    .footer-title{ font-weight: 700; font-size: 18px; margin: 6px 0 }
+    .footer-links{ display:grid; gap:12px; margin-top:14px }
+    .footer-contact{ width:min(800px, 100%); margin: 0 auto; text-align:center; padding: 0 20px 20px }
+    .footer-contact .line{ font-size: 16px; display:flex; gap:8px; justify-content:center }
+    .credit{ width:220px; margin: 20px auto 0 }
+
+    @media (max-width: 768px){
+      .title{font-size:18px}
+    }
   </style>
 </head>
 <body>
 
-<input id="drawer-toggle" type="checkbox" hidden>
-
-<!-- Drawer -->
-<aside class="drawer" aria-label="Menu latéral">
-  <div class="drawer-inner">
-    <h1 class="brand">TURPIN Loan</h1>
-    <hr class="divider">
-    <nav class="drawer-nav" aria-label="Navigation latérale">
-      <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
-      <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
-      <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
-      <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
-      <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
-      <a href="https://loan881.github.io/loanturpin/services&politics" class="nav-link">Services & Politics</a>
-    </nav>
-    <div class="drawer-spacer"></div>
-    <h2 class="footer-title">Social Media</h2>
-    <hr class="divider">
-    <div class="social-lines">
-      <div>Instagram : <a class="value" href="https://instagram.com/turpinloanart" target="_blank" rel="noopener">turpinloanart</a></div>
-      <div>TikTok : <a class="value" href="https://tiktok.com/@turpinloanart" target="_blank" rel="noopener">turpinloanart</a></div>
+  <!-- Top Bar -->
+  <header>
+    <div class="container topbar">
+      <div class="back">
+        <a href="produits.html" aria-label="Retour" title="Retour">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </a>
+      </div>
+      <h1 class="title">Panier</h1>
+      <div class="cart">
+        <a href="panier.html" aria-label="Panier">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h14l-1.6 9.5H9.2L7 6zm0 0L5.5 3H3"/><circle cx="10" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/></svg>
+          <span id="cartBadge" class="badge">0</span>
+        </a>
+      </div>
     </div>
-  </div>
-</aside>
+  </header>
 
-<label class="backdrop" for="drawer-toggle" aria-hidden="true"></label>
+  <!-- Contenu -->
+  <section>
+    <div class="container">
+      <div class="grid">
+        <!-- Liste articles -->
+        <div>
+          <h2 class="h2">Vos articles</h2>
+          <div class="rule"></div>
 
-<!-- Navbar -->
-<header class="appbar">
-  <div class="bar">
-    <div class="left">
-      <label class="icon-btn" for="drawer-toggle" aria-label="Menu">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-      </label>
-    </div>
-    <h2 class="title">Panier</h2>
-    <div class="right"></div>
-  </div>
-</header>
+          <div id="empty" class="empty" style="display:none">
+            Votre panier est vide. <a class="button" href="produits.html" style="margin-left:10px">Découvrir les produits</a>
+          </div>
 
-<main>
-  <div class="container">
-    <div class="grid">
-      <!-- Panier -->
-      <section class="cart" id="cart">
-        <div class="cart-header">
-          <div>Article</div>
-          <div>Quantité</div>
-          <div>Prix</div>
-          <div></div>
+          <div id="list" class="list" aria-live="polite"></div>
         </div>
-        <div id="cart-body"></div>
-      </section>
 
-      <!-- Récap & Actions -->
-      <aside class="summary">
-        <div class="row"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
-        <div class="row muted"><span>Frais de port</span><span id="shipping">Calculés à l'étape suivante</span></div>
-        <div class="row total"><span>Total</span><span id="total">0 €</span></div>
-        <div style="display:grid; gap:10px; margin-top:6px">
-          <button id="clear" class="btn secondary">Vider le panier</button>
-          <a class="btn" href="checkout.html">Aller au paiement</a>
-        </div>
-        <p class="muted" style="font-size:12px;margin:8px 0 0">Le paiement se fait sur la page <strong>checkout.html</strong> (Stripe). Cette page-ci ne tente plus d’appeler d’API serveur.</p>
-      </aside>
+        <!-- Résumé -->
+        <aside class="summary" aria-label="Récapitulatif">
+          <div class="rowline"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
+          <div class="rowline muted"><span>Frais de port</span><span>Calculés au paiement</span></div>
+          <div class="rowline total"><span>Total</span><span id="total">0 €</span></div>
+
+          <div class="buttons">
+            <button id="clear" class="ghost" type="button">Vider le panier</button>
+            <a class="button" href="checkout.html">Aller au paiement</a>
+          </div>
+
+          <p class="muted" style="font-size:.95rem; margin:8px 0 0">
+            Taxes incluses. Les frais de port sont ajoutés sur la page de paiement.
+          </p>
+        </aside>
+      </div>
     </div>
+  </section>
 
-    <div id="empty" class="empty" style="display:none">
-      Votre panier est vide. <a href="merchandising" style="text-decoration:underline">Découvrir les produits</a>
-    </div>
-  </div>
-
-  <!-- Footer (identique à Home) -->
+  <!-- Footer -->
   <footer id="contact" class="site-footer" role="contentinfo">
     <hr class="divider" aria-hidden="true">
     <div class="footer-top">
       <div class="col">
         <h5 class="footer-title">Page</h5>
         <hr class="divider w30" aria-hidden="true">
-        <nav class="footer-links" aria-label="Pied de page - navigation">
+        <nav class="footer-links" aria-label="Footer navigation">
           <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
           <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
-          <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
           <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
           <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
-          <a href="https://loan881.github.io/loanturpin/services&politics" class="nav-link">Services & Politics</a>
         </nav>
       </div>
       <div class="col">
@@ -188,139 +229,84 @@
       </div>
     </div>
   </footer>
-</main>
 
-<script>
-  // ====== Catalogue (fallback si pas de data/products.json) ======
-  const FALLBACK_PRODUCTS = [
-    { id: 'tee-classic', name: 'T-shirt Classic', price: 1990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=1' },
-    { id: 'hoodie-premium', name: 'Hoodie Premium', price: 3990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=2' },
-    { id: 'mug-fun', name: 'Mug Fun', price: 1490, currency: 'EUR', image: 'https://picsum.photos/300/300?random=3' }
-  ];
-  let PRODUCTS = FALLBACK_PRODUCTS;
+  <script>
+    /* ===== Utils & Panier ===== */
+    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
+    const el = id => document.getElementById(id);
 
-  async function loadProducts() {
-    try {
-      const res = await fetch('data/products.json'); // chemin RELATIF GitHub Pages
-      if (!res.ok) throw new Error('no json');
-      PRODUCTS = await res.json();
-    } catch (_) {
-      PRODUCTS = FALLBACK_PRODUCTS;
+    const CART_KEY = 'cart';
+    const loadCart = ()=>{ try{ return JSON.parse(localStorage.getItem(CART_KEY)||'[]'); }catch{ return []; } };
+    const saveCart = c => localStorage.setItem(CART_KEY, JSON.stringify(c));
+    const cartCount = ()=> loadCart().reduce((n,l)=> n + Math.max(1, parseInt(l.qty||1,10)), 0);
+    function updateBadge(){
+      const n = cartCount(), b = el('cartBadge');
+      if(n>0){ b.textContent=n; b.style.display='inline-block'; } else { b.style.display='none'; }
     }
-  }
-  function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
 
-  // Format monnaie
-  const formatEUR = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format((v||0)/100);
+    function computeSubtotal(lines){ return lines.reduce((s,l)=> s + (l.price*l.qty), 0); }
 
-  // ====== Panier (normalisation + fusion doublons) ======
-  const cartKey = 'cart';
+    function render(){
+      const list = el('list');
+      const empty = el('empty');
+      list.innerHTML = '';
 
-  function loadCartRaw(){
-    try {
-      const data = JSON.parse(localStorage.getItem(cartKey) || '[]');
-      return Array.isArray(data) ? data : [];
-    } catch { return []; }
-  }
-  function normalizeLine(l){
-    // Accepte {id, name, price, image, option, qty} et formats proches
-    const id = l.id ?? l.productId ?? l.slug;
-    if (!id) return null;
-    const qty = Math.max(1, parseInt(l.qty || 1, 10));
-    const p = getProduct(id);
-    return {
-      id,
-      name: l.name ?? p?.name ?? id,
-      price: Number.isFinite(l.price) ? l.price : (p?.price ?? 0), // cents
-      currency: (l.currency || p?.currency || 'EUR').toUpperCase(),
-      image: l.image ?? p?.image ?? 'https://picsum.photos/120/120?blur=2',
-      option: l.option ?? l.variant ?? '',
-      qty
-    };
-  }
-  function mergeDuplicates(lines){
-    const map = new Map();
-    for (const l of lines){
-      const key = l.id + '|' + (l.option||'');
-      const prev = map.get(key);
-      if (prev) prev.qty += l.qty;
-      else map.set(key, { ...l });
-    }
-    return Array.from(map.values());
-  }
-  function loadCart(){
-    const raw = loadCartRaw();
-    const norm = raw.map(normalizeLine).filter(Boolean);
-    return mergeDuplicates(norm);
-  }
-  function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
+      const cart = loadCart();
+      if(!cart.length){
+        empty.style.display = 'block';
+        el('subtotal').textContent = '0 €';
+        el('total').textContent = '0 €';
+        return;
+      }
+      empty.style.display = 'none';
 
-  // ====== Rendu ======
-  function computeSubtotal(c){ return c.reduce((s,l)=> s + (l.price*l.qty), 0); }
-
-  function render(){
-    const body = document.getElementById('cart-body');
-    const emptyEl = document.getElementById('empty');
-    const container = document.getElementById('cart');
-    body.innerHTML = '';
-    const cart = loadCart();
-
-    if (!cart.length){
-      container.style.display = 'none';
-      emptyEl.style.display = 'block';
-      document.getElementById('subtotal').textContent = '0 €';
-      document.getElementById('total').textContent = '0 €';
-      return;
-    }
-    container.style.display = '';
-    emptyEl.style.display = 'none';
-
-    cart.forEach((l, i) => {
-      const row = document.createElement('div');
-      row.className = 'cart-line';
-      row.innerHTML = `
-        <div class="cart-item">
-          <div class="thumb"><img src="${l.image}" alt=""></div>
-          <div>
-            <div class="name">${l.name}</div>
-            ${l.option ? `<div class="muted">Variante : ${l.option}</div>` : ''}
+      cart.forEach((l, i) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <div class="thumb"><img src="${l.image || 'https://picsum.photos/seed/placeholder/300/300'}" alt=""></div>
+          <div class="meta">
+            <div class="name">${l.name || l.id}</div>
+            ${l.option ? `<div class="opt">Variante : ${l.option}</div>` : ''}
+            <button class="rm" data-i="${i}" aria-label="Retirer">Retirer</button>
           </div>
-        </div>
-        <div class="qty">
-          <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
-          <span>${l.qty}</span>
-          <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
-        </div>
-        <div><strong>${formatEUR(l.price * l.qty)}</strong></div>
-        <button class="rm" title="Retirer" data-i="${i}">×</button>
-      `;
-      body.appendChild(row);
-    });
+          <div class="act">
+            <div class="qty">
+              <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
+              <span>${l.qty || 1}</span>
+              <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
+            </div>
+            <div class="price">${€((l.price||0) * (l.qty||1))}</div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
 
-    const subtotal = computeSubtotal(cart);
-    document.getElementById('subtotal').textContent = formatEUR(subtotal);
-    document.getElementById('total').textContent = formatEUR(subtotal); // frais de port ajoutés au checkout
+      const subtotal = computeSubtotal(cart);
+      el('subtotal').textContent = €(subtotal);
+      el('total').textContent    = €(subtotal);
 
-    // Actions qty/remove
-    body.onclick = (e) => {
-      const inc = e.target.closest('.inc');
-      const dec = e.target.closest('.dec');
-      const rm  = e.target.closest('.rm');
-      const c = loadCart();
-      if (inc){ c[+inc.dataset.i].qty++; saveCart(c); render(); }
-      if (dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); }
-      if (rm){  c.splice(+rm.dataset.i,1); saveCart(c); render(); }
-    };
-  }
+      // Delegation actions
+      list.onclick = (e)=>{
+        const inc = e.target.closest('.inc');
+        const dec = e.target.closest('.dec');
+        const rm  = e.target.closest('.rm');
+        const c = loadCart();
+        if(inc){ c[+inc.dataset.i].qty = (c[+inc.dataset.i].qty||1) + 1; saveCart(c); updateBadge(); render(); }
+        if(dec){ c[+dec.dataset.i].qty = Math.max(1, (c[+dec.dataset.i].qty||1)-1); saveCart(c); updateBadge(); render(); }
+        if(rm){  c.splice(+rm.dataset.i,1); saveCart(c); updateBadge(); render(); }
+      };
+    }
 
-  // Vider le panier
-  document.getElementById('clear').onclick = () => { localStorage.setItem(cartKey, '[]'); render(); };
+    // Vider
+    el('clear').onclick = ()=>{ localStorage.setItem(CART_KEY, '[]'); updateBadge(); render(); };
 
-  // Init
-  (async function(){
-    await loadProducts();
-    render();
-  })();
-</script>
+    // Init
+    (function(){
+      updateBadge();
+      render();
+    })();
+  </script>
 </body>
 </html>
+
