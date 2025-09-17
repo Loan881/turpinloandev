@@ -5,95 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Produit</title>
 
-  <!-- Font -->
+  <!-- Police -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#ffffff; --text:#111111; --muted:#2d2d2d;
-      --border:#000000; --accent:#1E155C;
-      --tile: 66vh;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%; overflow-x:hidden}
-    body{margin:0; font-family:"Playfair Display", serif; color:var(--text); background:var(--bg); line-height:1.55;}
-    img{max-width:100%; height:auto; display:block}
-    a{color:inherit; text-decoration:none}
-    .container{width:min(1200px, 92%); margin-inline:auto}
+    :root{ --bg:#ffffff; --text:#111; --muted:#2d2d2d; --accent:#1E155C; }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; overflow-x:hidden }
+    body{ margin:0; font-family:"Playfair Display",serif; color:var(--text); background:var(--bg); line-height:1.55 }
+    img{ max-width:100%; height:auto; display:block }
+    a{ color:inherit; text-decoration:none }
+    .container{ width:min(1200px,92%); margin-inline:auto }
 
-    /* Topbar */
-    header{
-      background:var(--bg);
-      position:sticky; top:0; z-index:40;
-      border-bottom:1px solid rgba(0,0,0,.05);
-      backdrop-filter:saturate(160%) blur(6px);
-    }
-    .topbar{position:relative; display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0; min-height:60px}
-    .back{position:absolute; left:0; top:50%; transform:translateY(-50%)}
-    .back a{display:inline-flex; align-items:center; justify-content:center; padding:12px; border:none; background:transparent; border-radius:8px; line-height:0; cursor:pointer}
-    .back a:hover{opacity:.85}
-    .back a svg{width:28px; height:28px; fill:currentColor}
-    .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px}
+    header{ background:#fff; position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(0,0,0,.05) }
+    .topbar{ position:relative; display:flex; align-items:center; justify-content:center; min-height:60px; padding:12px 0 }
+    .back{ position:absolute; left:0; top:50%; transform:translateY(-50%) }
+    .back a{ display:inline-flex; padding:12px; border-radius:8px }
+    .title{ position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px }
 
-    /* Layout */
-    section{padding:32px 0}
-    .grid{display:grid; gap:24px; grid-template-columns: 1.2fr 0.8fr; align-items:start}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
+    section{ padding:32px 0 }
+    .grid{ display:grid; gap:24px; grid-template-columns:1.2fr .8fr; align-items:start }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
 
-    /* Gallery */
-    .hero{aspect-ratio:1/1; background:#f4f4f6; border:1px solid rgba(0,0,0,.08); border-radius:12px; overflow:hidden}
-    .thumbs{display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:10px}
-    .thumbs img{width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid rgba(0,0,0,.08); border-radius:8px; cursor:pointer}
+    .hero{ aspect-ratio:1/1; background:#f4f4f6; border:1px solid rgba(0,0,0,.08); border-radius:12px; overflow:hidden }
+    .thumbs{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:10px }
+    .thumbs img{ width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid rgba(0,0,0,.08); border-radius:8px; cursor:pointer }
 
-    /* Card */
-    .card{background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:16px; display:grid; gap:10px}
-    .name{font-weight:700; font-size:24px}
-    .desc{color:var(--muted)}
-    .tags{display:flex; gap:8px; flex-wrap:wrap}
-    .tag{font-size:12px; border:1px solid rgba(0,0,0,.12); padding:4px 8px; border-radius:999px}
-    .price{font-weight:800; font-size:20px}
-    .field{display:grid; gap:6px}
-    .field label{font-weight:600; font-size:14px}
-    select,input{border:1px solid rgba(0,0,0,.12); border-radius:10px; padding:10px 12px; font:inherit}
-    .row{display:grid; grid-template-columns:1fr 180px; gap:12px; align-items:end}
-    .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
-    .muted{color:var(--muted); font-size:12px}
-    .status{padding:10px; border:1px dashed #bbb; border-radius:10px; font-size:12px; display:none}
+    .card{ background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:16px; display:grid; gap:10px }
+    .name{ font-weight:700; font-size:24px }
+    .desc{ color:var(--muted) }
+    .tags{ display:flex; gap:8px; flex-wrap:wrap }
+    .tag{ font-size:12px; border:1px solid rgba(0,0,0,.12); border-radius:999px; padding:4px 8px }
+    .price{ font-weight:800; font-size:20px }
+    .field{ display:grid; gap:6px }
+    .field label{ font-weight:600; font-size:14px }
+    select,input{ border:1px solid rgba(0,0,0,.12); border-radius:10px; padding:10px 12px; font:inherit }
+    .row{ display:grid; grid-template-columns:1fr 180px; gap:12px; align-items:end }
+    .button{ display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer }
+    .muted{ color:var(--muted); font-size:12px }
+
+    .status{ display:none; padding:10px; border:1px dashed #bbb; border-radius:10px; font:12px ui-monospace,monospace; white-space:pre-wrap }
   </style>
 </head>
 <body>
 
-  <!-- Top Bar -->
   <header>
     <div class="container topbar">
-      <div class="back">
-        <a href="produits.html" aria-label="Retour" title="Retour">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-        </a>
-      </div>
+      <div class="back"><a href="produits.html" aria-label="Retour">← Retour</a></div>
       <h1 class="title">Fiche produit</h1>
     </div>
   </header>
 
   <section>
     <div class="container">
-      <div id="err" class="status"></div>
+      <div id="status" class="status"></div>
 
-      <div class="grid" id="grid" style="display:none">
+      <div id="grid" class="grid" style="display:none">
         <div>
           <div class="hero"><img id="hero" alt=""></div>
           <div id="thumbs" class="thumbs"></div>
         </div>
 
         <aside class="card">
-          <div class="name" id="name">—</div>
-          <div class="desc" id="desc"></div>
-          <div class="tags" id="tags"></div>
-          <div class="price" id="price">—</div>
+          <div id="name" class="name">-</div>
+          <div id="desc" class="desc"></div>
+          <div id="tags" class="tags"></div>
+          <div id="price" class="price">-</div>
 
-          <div class="field" id="variantField">
+          <div id="variantField" class="field">
             <label for="variant">Variante</label>
             <select id="variant"></select>
           </div>
@@ -101,36 +82,41 @@
           <div class="row">
             <div class="field">
               <label for="qty">Quantite</label>
-              <input id="qty" type="number" min="1" value="1" />
+              <input id="qty" type="number" min="1" value="1">
             </div>
             <button id="add" class="button" type="button">Ajouter au panier</button>
           </div>
 
-          <div class="muted">Paiement sécurisé sur la page panier/checkout.</div>
+          <div class="muted">Redirection vers panier apres ajout.</div>
         </aside>
       </div>
     </div>
   </section>
 
   <script>
-    // ===== Utilitaires =====
-    const $ = (id) => document.getElementById(id);
-    const euro = (v) => new Intl.NumberFormat("fr-FR", { style:"currency", currency:"EUR" }).format((v||0)/100);
-    function showError(msg){
-      const E = $("err"); E.style.display="block"; E.textContent = String(msg || "Erreur inconnue");
+    "use strict";
+
+    // ASCII-only helpers
+    function $(id){ return document.getElementById(id); }
+    function euro(cents){
+      var v = Number(cents)||0;
+      return new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(v/100);
+    }
+    function showStatus(msg){
+      var S=$("status"); S.style.display="block"; S.textContent=String(msg);
     }
 
-    // ===== Panier (localStorage) =====
-    const CART_KEY = "cart";
-    function readCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||"[]"); }catch{ return []; } }
+    // Cart I/O
+    var CART_KEY = "cart";
+    function readCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY)||"[]"); }catch(e){ return []; } }
     function writeCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
 
-    // ===== Données (fallback simple, images placeholders) =====
-    const FALLBACK = [
+    // Demo data (ASCII only in JS)
+    var PRODUCTS = [
       {
         id:"tee-classic",
         name:"T-shirt Classic",
-        description:"Coton 100% file a l'anneau, coupe unisexe. Impression durable.",
+        description:"Coton 100 pourcent, coupe unisexe. Impression durable.",
         images:["https://picsum.photos/seed/tee1/1000/1000","https://picsum.photos/seed/tee2/1000/1000","https://picsum.photos/seed/tee3/1000/1000"],
         price:1990, currency:"EUR",
         tags:["T-shirt","Unisexe","Coton"],
@@ -142,7 +128,7 @@
       {
         id:"hoodie-premium",
         name:"Hoodie Premium",
-        description:"Molleton doux, capuche doublee et poche kangourou.",
+        description:"Molleton doux et capuche.",
         images:["https://picsum.photos/seed/hood1/1000/1000","https://picsum.photos/seed/hood2/1000/1000"],
         price:3990, currency:"EUR",
         tags:["Hoodie","Confort"],
@@ -150,94 +136,104 @@
           {id:"noir-m", label:"Noir / M", price:3990},
           {id:"gris-m", label:"Gris / M", price:4090}
         ]
-      },
-      {
-        id:"mug-fun",
-        name:"Mug Fun",
-        description:"Ceramique 325 ml, impression HQ.",
-        images:["https://picsum.photos/seed/mug1/1000/1000","https://picsum.photos/seed/mug2/1000/1000"],
-        price:1490, currency:"EUR",
-        tags:["Mug","Ceramique"],
-        variants:[
-          {id:"blanc-unique", label:"Blanc / Taille unique", price:1490}
-        ]
       }
     ];
 
-    // Essaie de charger data/products.json, sinon fallback
-    async function loadProducts(){
+    // Safe URL param
+    function getIdFromUrl(){
       try{
-        const r = await fetch("data/products.json");
-        if(!r.ok) throw 0;
-        const j = await r.json();
-        return Array.isArray(j) && j.length ? j : FALLBACK;
-      }catch{
-        return FALLBACK;
+        var p = new URLSearchParams(window.location.search);
+        return p.get("id") || "tee-classic";
+      }catch(e){
+        return "tee-classic";
       }
     }
 
-    // ===== Page =====
-    (async function init(){
+    // Main
+    (function(){
       try{
-        const all = await loadProducts();
-        const id = new URLSearchParams(location.search).get("id") || "tee-classic";
-        const product = all.find(p => p.id === id) || all[0];
+        var productId = getIdFromUrl();
+        var product = null;
+        for(var i=0;i<PRODUCTS.length;i++){ if(PRODUCTS[i].id===productId){ product=PRODUCTS[i]; break; } }
+        if(!product){ product = PRODUCTS[0]; }
 
-        // Affichage
         $("grid").style.display = "grid";
+
+        // Fill texts
         $("name").textContent = product.name;
         $("desc").textContent = product.description || "";
-        $("tags").innerHTML = (product.tags||[]).map(t => '<span class="tag">'+t+'</span>').join("");
+        var tagsBox = $("tags"); tagsBox.innerHTML = "";
+        var t; for(var k=0;k<(product.tags||[]).length;k++){
+          t = document.createElement("span"); t.className="tag"; t.textContent = product.tags[k];
+          tagsBox.appendChild(t);
+        }
         $("price").textContent = euro(product.price);
 
-        // Galerie
-        const hero = $("hero");
+        // Gallery
+        var hero = $("hero");
         hero.src = (product.images && product.images[0]) || "https://picsum.photos/seed/hero/1000/1000";
         hero.alt = product.name;
-        const thumbs = $("thumbs"); thumbs.innerHTML = "";
-        (product.images||[]).slice(0,6).forEach(src=>{
-          const im = new Image(); im.src = src; im.alt = "";
-          im.addEventListener("click", ()=>{ hero.src = src; });
-          thumbs.appendChild(im);
-        });
 
-        // Variantes
-        const select = $("variant");
-        const vf = $("variantField");
-        let current = null;
-        select.innerHTML = "";
-        if (Array.isArray(product.variants) && product.variants.length){
-          product.variants.forEach(v => select.add(new Option(v.label, v.id)));
-          current = product.variants[0];
-          select.addEventListener("change", ()=>{
-            current = product.variants.find(v => v.id === select.value) || current;
-            $("price").textContent = euro((current && current.price != null) ? current.price : product.price);
-          });
-        } else {
-          vf.style.display = "none";
+        var thumbs = $("thumbs"); thumbs.innerHTML = "";
+        for(var j=0;j<Math.min((product.images||[]).length,6);j++){
+          var src = product.images[j];
+          var im = new Image(); im.src = src; im.alt = "";
+          im.onclick = (function(s){ return function(){ hero.src = s; }; })(src);
+          thumbs.appendChild(im);
         }
 
-        // Ajouter au panier
-        $("add").addEventListener("click", ()=>{
-          const qty = Math.max(1, parseInt(($("qty").value||"1"), 10) || 1);
-          const line = {
+        // Variants
+        var select = $("variant");
+        var field  = $("variantField");
+        var current = null;
+        select.innerHTML = "";
+
+        if(product.variants && product.variants.length){
+          for(var v=0; v<product.variants.length; v++){
+            var opt = document.createElement("option");
+            opt.value = product.variants[v].id;
+            opt.text  = product.variants[v].label;
+            select.add(opt);
+          }
+          current = product.variants[0];
+          select.onchange = function(){
+            for(var v2=0; v2<product.variants.length; v2++){
+              if(product.variants[v2].id === select.value){ current = product.variants[v2]; break; }
+            }
+            $("price").textContent = euro( (current && current.price!=null) ? current.price : product.price );
+          };
+        } else {
+          field.style.display = "none";
+        }
+
+        // Add to cart
+        $("add").onclick = function(){
+          var qty = parseInt($("qty").value, 10);
+          if(!(qty>0)) qty = 1;
+
+          var line = {
             id: product.id,
             name: product.name,
-            price: (current && current.price != null) ? current.price : product.price,
+            price: (current && current.price!=null ? current.price : product.price),
             currency: (product.currency || "EUR").toUpperCase(),
             image: hero.src,
             option: current ? current.label : "",
             qty: qty
           };
-          const cart = readCart();
-          const i = cart.findIndex(l => l.id === line.id && (l.option||"") === (line.option||""));
-          if (i >= 0) cart[i].qty += qty; else cart.push(line);
+
+          var cart = readCart();
+          var found = -1;
+          for(var m=0;m<cart.length;m++){
+            if(cart[m].id===line.id && String(cart[m].option||"")===String(line.option||"")){ found=m; break; }
+          }
+          if(found>=0){ cart[found].qty += qty; } else { cart.push(line); }
           writeCart(cart);
-          location.href = "panier.html";
-        });
+
+          window.location.href = "panier.html";
+        };
 
       }catch(err){
-        showError(err && err.message ? err.message : err);
+        showStatus(err && err.message ? err.message : err);
       }
     })();
   </script>
