@@ -1,0 +1,18 @@
+[
+  {
+    "id": "tee-classic",
+    "name": "T-shirt Classic",
+    "description": "Coton 100%, coupe unisexe.",
+    "price": 1990,
+    "currency": "EUR",
+    "image": "/images/tee-classic.jpg"
+  },
+  {
+    "id": "hoodie-premium",
+    "name": "Hoodie Premium",
+    "description": "Molleton doux, capuche doublée.",
+    "price": 3990,
+    "currency": "EUR",
+    "image": "/images/hoodie-premium.jpg"
+  }
+]
