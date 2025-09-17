@@ -1,69 +1,227 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Détail produit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Police -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
-    img { max-width: 320px; border-radius: 8px; }
-    .price { font-weight: bold; font-size: 20px; margin: 10px 0; }
-    button { padding: 10px 16px; border-radius: 10px; border: 1px solid #ddd; background:#111; color:#fff; cursor:pointer; }
-    a { color: inherit; }
+    :root{ --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --container:1100px; }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family:"Playfair Display",serif; color:var(--ink); background:var(--paper) }
+    a{ color:inherit; text-decoration:none }
+    .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px 20px 60px }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff; z-index:5 }
+    .title{ font-weight:900; font-size:20px }
+    .link{ font-weight:700 }
+    .grid{ display:grid; gap:24px; grid-template-columns:1fr; margin-top:20px }
+    @media(min-width:980px){ .grid{ grid-template-columns:1.2fr .8fr } }
+    .gallery{ display:grid; gap:12px; align-content:start }
+    .hero{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .hero img{ display:block; width:100%; height:auto }
+    .thumbs{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px }
+    .thumbs img{ width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid var(--line); border-radius:8px; cursor:pointer }
+    .card{ border:1px solid var(--line); border-radius:12px; padding:16px; }
+    .name{ font-weight:900; font-size:26px; margin:0 0 8px }
+    .desc{ color:var(--muted); margin:0 0 12px }
+    .price{ font-weight:900; font-size:22px; margin:6px 0 12px }
+    .field{ display:grid; gap:6px; margin:10px 0 }
+    label{ font-weight:700; font-size:14px }
+    select, input[type="number"]{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit }
+    .row{ display:grid; grid-template-columns:1fr 120px; gap:12px; align-items:end }
+    .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:900 }
+    .muted{ color:var(--muted); font-size:12px }
+    .alert{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px }
   </style>
 </head>
 <body>
-  <a href="produits.html">← Retour au catalogue</a>
-  <div id="product" style="margin-top:16px"></div>
+  <header>
+    <a class="link" href="produits.html">← Retour</a>
+    <div class="title">Fiche produit</div>
+    <a class="link" href="panier.html">Panier</a>
+  </header>
+
+  <div class="container">
+    <div id="status" class="alert" style="display:none"></div>
+
+    <div class="grid">
+      <section class="gallery">
+        <div class="hero"><img id="hero" src="" alt=""></div>
+        <div id="thumbs" class="thumbs"></div>
+      </section>
+
+      <aside class="card" id="panel">
+        <h1 class="name" id="name">—</h1>
+        <p class="desc" id="desc"></p>
+        <div class="price" id="price">—</div>
+
+        <div class="field" id="variantField" style="display:none">
+          <label for="variant">Variante</label>
+          <select id="variant"></select>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="qty">Quantité</label>
+            <input id="qty" type="number" min="1" value="1">
+          </div>
+          <button id="add" class="btn">Ajouter au panier</button>
+        </div>
+
+        <p class="muted">Paiement et frais de port calculés au checkout.</p>
+      </aside>
+    </div>
+  </div>
 
   <script>
-    async function init() {
-      const params = new URLSearchParams(location.search);
-      const id = params.get("id");
+    // === Utils ===
+    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
+    const byPref = (...xs) => xs.find(Boolean);
 
-      // Charge le catalogue (chemin RELATIF pour GitHub Pages)
-      const res = await fetch("data/products.json");
-      const products = await res.json();
+    // Normalise une variante venant de différents schémas possibles
+    function normalizeVariant(v){
+      if (!v) return null;
+      const id = byPref(v.id, v.variantId, v.sku, v.external_id, v.name);
+      if (!id) return null;
+      const label = byPref(
+        v.label,
+        v.name,
+        (v.optionValues && Object.values(v.optionValues).join(' / ')),
+        v.sku,
+        String(id)
+      );
+      const price = Number.isFinite(v.price) ? v.price :
+                    (v.retail_price ? Math.round(Number(v.retail_price)*100) : undefined);
+      const image = byPref(v.image, v.preview_url, v.files?.[0]?.preview_url);
+      return { id: String(id), label: String(label), price, image };
+    }
 
-      const product = products.find(p => String(p.id) === String(id));
-      const container = document.getElementById("product");
+    // === Lecture du produit ===
+    const params = new URLSearchParams(location.search);
+    const productId = params.get('id');
 
-      if (!product) {
-        container.innerHTML = `<p><strong>Produit introuvable</strong> (id=${id || "—"})</p>`;
+    const el = (id)=>document.getElementById(id);
+    const statusEl = el('status');
+    function setStatus(msg, show=true){ statusEl.textContent = msg; statusEl.style.display = show?'block':'none'; }
+
+    let PRODUCT = null;
+    let VARIANTS = [];
+    let SELECTED = null; // variante sélectionnée normalisée {id,label,price,image}
+
+    async function loadProduct(){
+      if (!productId){ setStatus("Pas d'id dans l'URL. Exemple : produit.html?id=tee-classic"); return; }
+      let products = [];
+      try{
+        const res = await fetch('data/products.json'); // chemin relatif (GitHub Pages)
+        if (!res.ok) throw new Error('404 products.json');
+        products = await res.json();
+      }catch(e){
+        // Fallback de secours
+        products = [
+          { id:'tee-classic', name:'T-shirt Classic', description:'Coton 100%.', price:1990, currency:'EUR', image:'https://picsum.photos/600/600?random=1' }
+        ];
+      }
+
+      PRODUCT = products.find(p => String(p.id) === String(productId));
+      if (!PRODUCT){
+        setStatus(`Produit introuvable (id=${productId}). IDs dispos : ${products.map(p=>p.id).join(', ')}`);
         return;
       }
 
-      container.innerHTML = `
-        <h1>${product.name}</h1>
-        <img src="${product.image}" alt="${product.name}">
-        <p>${product.description || ""}</p>
-        <div class="price">${(product.price/100).toFixed(2)} €</div>
-        <button id="addCart">Ajouter au panier</button>
-      `;
+      // Images
+      const images = Array.isArray(PRODUCT.images) && PRODUCT.images.length ? PRODUCT.images
+                   : PRODUCT.image ? [PRODUCT.image]
+                   : ['https://picsum.photos/800/800?blur=2'];
+      el('hero').src = images[0];
+      el('hero').alt = PRODUCT.name || PRODUCT.id;
 
-      document.getElementById("addCart").onclick = () => {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-        const existing = cart.find(item => item.id === product.id);
-        if (existing) {
-          existing.qty += 1;
-        } else {
-          cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            currency: product.currency,
-            image: product.image,
-            qty: 1
-          });
-        }
-        localStorage.setItem("cart", JSON.stringify(cart));
-        // Redirige vers le panier immédiatement
-        window.location.href = "panier.html"; // ⚠️ pas de slash initial
-      };
+      const thumbs = el('thumbs');
+      thumbs.innerHTML = '';
+      images.slice(0,6).forEach(src=>{
+        const i = document.createElement('img');
+        i.src = src; i.alt = '';
+        i.onclick = ()=>{ el('hero').src = src; };
+        thumbs.appendChild(i);
+      });
+
+      // Texte & prix
+      el('name').textContent = PRODUCT.name || PRODUCT.id;
+      el('desc').textContent = PRODUCT.description || '';
+      el('price').textContent = €(PRODUCT.price || 0);
+
+      // Variantes (optionnel)
+      VARIANTS = Array.isArray(PRODUCT.variants) ? PRODUCT.variants.map(normalizeVariant).filter(Boolean) : [];
+      const variantField = el('variantField');
+      const variantSelect = el('variant');
+
+      if (VARIANTS.length){
+        variantField.style.display = 'block';
+        variantSelect.innerHTML = '';
+        VARIANTS.forEach(v=>{
+          const opt = new Option(v.label, v.id);
+          variantSelect.add(opt);
+        });
+        // Sélection par défaut
+        SELECTED = VARIANTS[0];
+        if (SELECTED?.price) el('price').textContent = €(SELECTED.price);
+
+        variantSelect.onchange = () => {
+          const v = VARIANTS.find(x => x.id === variantSelect.value);
+          SELECTED = v || null;
+          const price = byPref(v?.price, PRODUCT.price, 0);
+          el('price').textContent = €(price);
+          if (v?.image) el('hero').src = v.image;
+        };
+      } else {
+        SELECTED = null;
+        variantField.style.display = 'none';
+      }
+
+      setStatus('', false);
     }
 
-    init();
+    // === Panier ===
+    const cartKey = 'cart';
+    function loadCart(){ try{return JSON.parse(localStorage.getItem(cartKey)||'[]')}catch{return[]} }
+    function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
+
+    function addToCart(){
+      if (!PRODUCT) return;
+      const qty = Math.max(1, parseInt(el('qty').value || '1', 10));
+      const price = byPref(SELECTED?.price, PRODUCT.price, 0);
+      const option = SELECTED ? SELECTED.label : '';
+
+      const line = {
+        id: PRODUCT.id,
+        name: PRODUCT.name + (option ? ' — ' + option : ''),
+        price, // en centimes
+        currency: (PRODUCT.currency || 'EUR').toUpperCase(),
+        image: byPref(SELECTED?.image, Array.isArray(PRODUCT.images)&&PRODUCT.images[0], PRODUCT.image),
+        option,
+        qty
+      };
+
+      const cart = loadCart();
+      const idx = cart.findIndex(l => l.id === line.id && (l.option||'') === (line.option||''));
+      if (idx >= 0) cart[idx].qty += qty;
+      else cart.push(line);
+      saveCart(cart);
+
+      // Redirection immédiate vers le panier (chemin relatif)
+      window.location.href = 'panier.html';
+    }
+
+    // Boot
+    (async function(){
+      setStatus('Chargement du produit…');
+      await loadProduct();
+      el('add').onclick = addToCart;
+    })();
   </script>
 </body>
 </html>
-
