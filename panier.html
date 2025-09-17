@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panier</title>
 
+  <!-- Favicons (optionnel) -->
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
   <link rel="icon" type="image/png" href="favicon-16.png" sizes="16x16">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
+  <!-- Police Playfair Display -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;400;600;700;900&display=swap" rel="stylesheet">
@@ -23,6 +25,7 @@
     a{ color: inherit; text-decoration: none; }
     .container{ width:100%; max-width: var(--container); margin: 0 auto; padding-left: var(--pad-x); padding-right: var(--pad-x); }
 
+    /* Appbar */
     .appbar{ position:sticky; top:0; z-index:20; background: var(--paper); border-bottom: 1px solid var(--line); width: 100%; }
     .bar{ height:64px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 var(--pad-x); }
     .title{ font-weight: 600; font-size: 22px; text-align:center }
@@ -32,6 +35,7 @@
     .left{ display:flex; gap:6px; align-items:center }
     .right{ justify-self:end }
 
+    /* Drawer */
     .drawer{ position:fixed; inset:0 auto 0 0; width:320px; background:#fff; border-right:1px solid var(--line); transform: translateX(-100%); transition: transform .25s ease; z-index:30; }
     #drawer-toggle:checked ~ .drawer{ transform: translateX(0) }
     #drawer-toggle:checked ~ .backdrop{ opacity:1; pointer-events:auto }
@@ -44,6 +48,7 @@
     .social-lines{ display:grid; gap:10px; font-size: 16px }
     .backdrop{ position:fixed; inset:0; background: rgba(0,0,0,.25); z-index:25; opacity:0; pointer-events:none; transition:.25s; }
 
+    /* Panier */
     main{ padding: 30px 0 60px; }
     .grid{ display:grid; grid-template-columns: 1fr; gap: 24px; }
     @media (min-width: 950px){ .grid{ grid-template-columns: 1.4fr 1fr; } }
@@ -77,6 +82,7 @@
 
 <input id="drawer-toggle" type="checkbox" hidden>
 
+<!-- Drawer -->
 <aside class="drawer" aria-label="Menu latéral">
   <div class="drawer-inner">
     <h1 class="brand">TURPIN Loan</h1>
@@ -87,6 +93,7 @@
       <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
       <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
       <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
+      <a href="https://loan881.github.io/loanturpin/services&politics" class="nav-link">Services & Politics</a>
     </nav>
     <div class="drawer-spacer"></div>
     <h2 class="footer-title">Social Media</h2>
@@ -100,6 +107,7 @@
 
 <label class="backdrop" for="drawer-toggle" aria-hidden="true"></label>
 
+<!-- Navbar -->
 <header class="appbar">
   <div class="bar">
     <div class="left">
@@ -115,6 +123,7 @@
 <main>
   <div class="container">
     <div class="grid">
+      <!-- Panier -->
       <section class="cart" id="cart">
         <div class="cart-header">
           <div>Article</div>
@@ -125,6 +134,7 @@
         <div id="cart-body"></div>
       </section>
 
+      <!-- Récap & Actions -->
       <aside class="summary">
         <div class="row"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
         <div class="row muted"><span>Frais de port</span><span id="shipping">Calculés à l'étape suivante</span></div>
@@ -142,6 +152,7 @@
     </div>
   </div>
 
+  <!-- Footer (identique à Home) -->
   <footer id="contact" class="site-footer" role="contentinfo">
     <hr class="divider" aria-hidden="true">
     <div class="footer-top">
@@ -154,6 +165,7 @@
           <a href="https://loan881.github.io/loanturpin/merchandising" class="nav-link">Merchandising</a>
           <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
           <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
+          <a href="https://loan881.github.io/loanturpin/services&politics" class="nav-link">Services & Politics</a>
         </nav>
       </div>
       <div class="col">
@@ -179,7 +191,7 @@
 </main>
 
 <script>
-  // ====== Catalogue (avec fallback) ======
+  // ====== Catalogue (fallback si pas de data/products.json) ======
   const FALLBACK_PRODUCTS = [
     { id: 'tee-classic', name: 'T-shirt Classic', price: 1990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=1' },
     { id: 'hoodie-premium', name: 'Hoodie Premium', price: 3990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=2' },
@@ -189,7 +201,7 @@
 
   async function loadProducts() {
     try {
-      const res = await fetch('data/products.json');
+      const res = await fetch('data/products.json'); // chemin RELATIF GitHub Pages
       if (!res.ok) throw new Error('no json');
       PRODUCTS = await res.json();
     } catch (_) {
@@ -198,7 +210,7 @@
   }
   function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
 
-  // ✅ Remplace l’ancienne fonction "€(...)" par ceci
+  // Format monnaie
   const formatEUR = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format((v||0)/100);
 
   // ====== Panier (normalisation + fusion doublons) ======
@@ -211,6 +223,7 @@
     } catch { return []; }
   }
   function normalizeLine(l){
+    // Accepte {id, name, price, image, option, qty} et formats proches
     const id = l.id ?? l.productId ?? l.slug;
     if (!id) return null;
     const qty = Math.max(1, parseInt(l.qty || 1, 10));
@@ -218,7 +231,7 @@
     return {
       id,
       name: l.name ?? p?.name ?? id,
-      price: Number.isFinite(l.price) ? l.price : (p?.price ?? 0),
+      price: Number.isFinite(l.price) ? l.price : (p?.price ?? 0), // cents
       currency: (l.currency || p?.currency || 'EUR').toUpperCase(),
       image: l.image ?? p?.image ?? 'https://picsum.photos/120/120?blur=2',
       option: l.option ?? l.variant ?? '',
@@ -262,8 +275,7 @@
     container.style.display = '';
     emptyEl.style.display = 'none';
 
-    for (let i=0;i<cart.length;i++){
-      const l = cart[i];
+    cart.forEach((l, i) => {
       const row = document.createElement('div');
       row.className = 'cart-line';
       row.innerHTML = `
@@ -283,12 +295,13 @@
         <button class="rm" title="Retirer" data-i="${i}">×</button>
       `;
       body.appendChild(row);
-    }
+    });
 
     const subtotal = computeSubtotal(cart);
     document.getElementById('subtotal').textContent = formatEUR(subtotal);
-    document.getElementById('total').textContent = formatEUR(subtotal);
+    document.getElementById('total').textContent = formatEUR(subtotal); // frais de port ajoutés au checkout
 
+    // Actions qty/remove
     body.onclick = (e) => {
       const inc = e.target.closest('.inc');
       const dec = e.target.closest('.dec');
@@ -300,8 +313,10 @@
     };
   }
 
+  // Vider le panier
   document.getElementById('clear').onclick = () => { localStorage.setItem(cartKey, '[]'); render(); };
 
+  // Init
   (async function(){
     await loadProducts();
     render();
