@@ -4,39 +4,30 @@
   <meta charset="utf-8" />
   <title>Panier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#ffffff; --text:#111; --muted:#2d2d2d; --accent:#1E155C;
-    }
+    :root{ --bg:#fff; --text:#111; --muted:#2d2d2d; --accent:#1E155C; }
     *{box-sizing:border-box}
     html,body{height:100%; overflow-x:hidden}
     body{margin:0; font-family:"Playfair Display", serif; color:var(--text); background:var(--bg); line-height:1.55;}
-    img{max-width:100%; display:block}
     a{color:inherit; text-decoration:none}
     .container{width:min(1200px, 92%); margin-inline:auto}
-
-    header{background:#fff; position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(0,0,0,.05); backdrop-filter:saturate(160%) blur(6px);}
+    /* Topbar */
+    header{background:#fff; position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(0,0,0,.05); backdrop-filter:saturate(160%) blur(6px)}
     .topbar{position:relative; display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0; min-height:60px}
     .back{position:absolute; left:0; top:50%; transform:translateY(-50%)}
     .back a{display:inline-flex; padding:12px; border-radius:8px}
     .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px}
-    .cart{position:absolute; right:0; top:50%; transform:translateY(-50%)}
-    .badge{ margin-left:8px; min-width:18px; height:18px; padding:0 6px; border-radius:9px; background:#000; color:#fff; font-size:11px; line-height:18px; text-align:center; font-weight:900; display:none }
-
+    /* Layout */
     section{padding:32px 0}
+    .grid{ display:grid; grid-template-columns: 1fr minmax(260px, 360px); gap: clamp(16px, 3.5vw, 28px); align-items:start; }
+    @media (max-width: 880px){ .grid{ grid-template-columns:1fr; } }
     .h2{font-weight:700}
     .rule{width:225px; height:1px; background:#000; margin:8px 0 18px}
     .muted{color:var(--muted)}
-
-    .grid{ display:grid; grid-template-columns: 1fr minmax(260px, 360px); gap: clamp(16px, 3.5vw, 28px); align-items:start; }
-    @media (max-width: 880px){ .grid{ grid-template-columns:1fr; } }
-
+    /* Liste */
     .list{display:grid; gap:12px}
     .row{display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:10px; background:#fff}
     .thumb{width:92px; height:92px; border-radius:10px; overflow:hidden; background:#f4f4f6; border:1px solid rgba(0,0,0,.06)}
@@ -49,21 +40,19 @@
     .qty button{ width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:#fff; cursor:pointer }
     .price{font-weight:800}
     .rm{background:transparent; border:none; color:#999; cursor:pointer; font-size:14px; text-decoration:underline}
-
+    .empty{text-align:center; border:1px dashed rgba(0,0,0,.18); border-radius:12px; padding:28px}
+    /* Résumé */
     .summary{ position:sticky; top:84px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:14px 16px; display:grid; gap:10px }
     .rowline{display:flex; justify-content:space-between; gap:12px}
     .total{font-weight:800; font-size: clamp(1.05rem, 1vw + 1rem, 1.25rem)}
     .buttons{display:grid; gap:10px; margin-top:6px}
     .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
     .ghost{display:inline-block; background:#fff; color:#111; border:1px solid rgba(0,0,0,.12); padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
-
-    .empty{text-align:center; border:1px dashed rgba(0,0,0,.18); border-radius:12px; padding:28px}
-
-    /* Debug (retire-le quand tout marche) */
-    .debug{ position:fixed; right:14px; bottom:14px; z-index:50; width:min(380px, 92vw); background:#fff; border:1px dashed #bbb; border-radius:12px; padding:10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    /* Debug (retire-le quand OK) */
+    .debug{ position:fixed; right:14px; bottom:14px; z-index:50; width:min(420px, 94vw); background:#fff; border:1px dashed #bbb; border-radius:12px; padding:10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
     .debug h4{ margin:0 0 6px; font-size:13px }
-    .debug pre{ margin:0; white-space:pre-wrap; word-break:break-word; max-height:200px; overflow:auto; background:#fafafa; padding:8px; border-radius:8px }
-    .debug .row{ display:flex; gap:8px; margin-bottom:8px }
+    .debug pre{ margin:0; white-space:pre-wrap; word-break:break-word; max-height:220px; overflow:auto; background:#fafafa; padding:8px; border-radius:8px }
+    .debug .row{ display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap }
   </style>
 </head>
 <body>
@@ -71,22 +60,11 @@
   <!-- Top Bar -->
   <header>
     <div class="container topbar">
-      <div class="back">
-        <a href="/loanturpin/produits.html" aria-label="Retour" title="Retour">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-        </a>
-      </div>
+      <div class="back"><a href="produits.html" aria-label="Retour" title="Retour">← Retour</a></div>
       <h1 class="title">Panier</h1>
-      <div class="cart">
-        <a href="/loanturpin/panier.html" aria-label="Panier">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h14l-1.6 9.5H9.2L7 6zm0 0L5.5 3H3"/><circle cx="10" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/></svg>
-          <span id="cartBadge" class="badge">0</span>
-        </a>
-      </div>
     </div>
   </header>
 
-  <!-- Contenu -->
   <section>
     <div class="container">
       <div class="grid">
@@ -96,7 +74,7 @@
 
           <div id="empty" class="empty" style="display:none">
             Votre panier est vide.
-            <a class="button" href="/loanturpin/produits.html" style="margin-left:10px">Découvrir les produits</a>
+            <a class="button" href="produits.html" style="margin-left:10px">Découvrir les produits</a>
           </div>
 
           <div id="list" class="list" aria-live="polite"></div>
@@ -106,122 +84,93 @@
           <div class="rowline"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
           <div class="rowline muted"><span>Frais de port</span><span>Calculés au paiement</span></div>
           <div class="rowline total"><span>Total</span><span id="total">0 €</span></div>
-
           <div class="buttons">
+            <button id="addDemo" class="ghost" type="button">+ Ajouter un article de test</button>
             <button id="clear" class="ghost" type="button">Vider le panier</button>
-            <a class="button" href="/loanturpin/checkout.html">Aller au paiement</a>
+            <a class="button" href="checkout.html">Aller au paiement</a>
           </div>
-
-          <p class="muted" style="font-size:.95rem; margin:8px 0 0">
-            Taxes incluses. Les frais de port sont ajoutés sur la page de paiement.
-          </p>
         </aside>
       </div>
     </div>
   </section>
 
-  <!-- Footer (identique) -->
-  <footer id="contact" class="site-footer" role="contentinfo">
-    <hr class="divider" aria-hidden="true">
-    <div class="footer-top">
-      <div class="col">
-        <h5 class="footer-title">Page</h5>
-        <hr class="divider w30" aria-hidden="true">
-        <nav class="footer-links" aria-label="Footer navigation">
-          <a href="https://loan881.github.io/loanturpin/" class="nav-link">Home</a>
-          <a href="https://loan881.github.io/loanturpin/gallery" class="nav-link">Gallery</a>
-          <a href="https://loan881.github.io/loanturpin/theartstory" class="nav-link">The Art Story</a>
-          <a href="https://loan881.github.io/loanturpin/contactme" class="nav-link">Contact Me.</a>
-        </nav>
-      </div>
-      <div class="col">
-        <h5 class="footer-title">Social Media</h5>
-        <hr class="divider w82" aria-hidden="true">
-        <div class="social-lines">
-          <div class="line"><span>Instagram :</span> <a href="https://instagram.com/turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
-          <div class="line"><span>TikTok :</span> <a href="https://tiktok.com/@turpinloanart" target="_blank" rel="noopener noreferrer">turpinloanart</a></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-contact">
-      <h5 class="footer-title">Contact Me</h5>
-      <hr class="divider" aria-hidden="true">
-      <p class="line"><span>E-Mail :</span> <a href="mailto:t.loan.contact@gmail.com">t.loan.contact@gmail.com</a></p>
-      <div class="credit">
-        <hr class="divider thin" aria-hidden="true">
-        <p>© 2025 TURPIN Loan</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Debug helper (retire-le quand OK) -->
-  <div class="debug" id="dbg" hidden>
+  <!-- Debug helper -->
+  <div class="debug" id="dbg">
     <div class="row">
-      <button id="seed">+ Ajouter un article de test</button>
-      <button id="refresh">↻ Refresh</button>
-      <button id="wipe">🗑️ Vider</button>
+      <button id="refresh">↻ Voir localStorage.cart</button>
+      <button id="wipe">🗑️ Supprimer la clé</button>
     </div>
     <h4>localStorage.cart</h4>
     <pre id="dump"></pre>
   </div>
 
   <script>
-    /* ===== Utils & Panier ===== */
-    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((Number(v)||0)/100);
+    // ------- Utils monnaie / DOM
+    const €  = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((Number(v)||0)/100);
     const el = id => document.getElementById(id);
-    const CART_KEY = 'cart';
 
-    function safeArray(x){ return Array.isArray(x) ? x : []; }
-    function loadCart(){
-      try{
-        const raw = localStorage.getItem(CART_KEY);
-        const arr = JSON.parse(raw || '[]');
-        // normalisation des lignes
-        return safeArray(arr).map(l=>{
-          const qty = Math.max(1, parseInt(l?.qty ?? 1, 10));
-          const price = Math.round(Number(l?.price ?? 0)); // cents
-          return {
-            id: l?.id || l?.productId || 'unknown',
-            name: l?.name || l?.id || 'Article',
-            price,
-            currency: (l?.currency || 'EUR').toUpperCase(),
-            image: l?.image || 'https://picsum.photos/seed/placeholder/300/300',
-            option: l?.option || l?.variant || '',
-            qty
-          };
-        }).filter(l=>!!l.id);
-      }catch(e){
-        return [];
+    // ------- Cart I/O (très tolérant)
+    const KEY = 'cart';
+
+    function readRaw(){
+      try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+      catch { return []; }
+    }
+    function writeRaw(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); }
+
+    // Normalise n'importe quelle forme {id, name, price, qty, image, option}
+    function normalizeLine(l){
+      if (!l) return null;
+      const id   = l.id ?? l.productId ?? l.slug ?? l.sku;
+      if (!id) return null;
+      const qty  = Math.max(1, parseInt(l.qty ?? 1, 10) || 1);
+      // accepte price en euros (ex: 19.9) ou en cents (ex: 1990)
+      let price = l.price ?? 0;
+      price = (price < 10 && String(price).includes('.')) ? Math.round(Number(price) * 100) : Math.round(Number(price));
+      return {
+        id,
+        name: l.name ?? id,
+        price: Number.isFinite(price) ? price : 0,
+        currency: (l.currency || 'EUR').toUpperCase(),
+        image: l.image || 'https://picsum.photos/seed/placeholder/600/600',
+        option: l.option ?? l.variant ?? '',
+        qty
+      };
+    }
+
+    function load(){
+      const raw = readRaw();
+      const norm = Array.isArray(raw) ? raw.map(normalizeLine).filter(Boolean) : [];
+      // fusionne doublons (même id + option)
+      const map = new Map();
+      for (const x of norm){
+        const k = x.id + '|' + (x.option||'');
+        if (map.has(k)) map.get(k).qty += x.qty;
+        else map.set(k, {...x});
       }
+      return Array.from(map.values());
     }
-    function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); }
-    const cartCount = ()=> loadCart().reduce((n,l)=> n + (l.qty||1), 0);
+    function save(lines){ writeRaw(lines); }
 
-    function updateBadge(){
-      const n = cartCount(), b = el('cartBadge');
-      if(n>0){ b.textContent=n; b.style.display='inline-block'; } else { b.style.display='none'; }
-    }
-    function subtotal(c){ return c.reduce((s,l)=> s + (l.price*l.qty), 0); }
+    // ------- Rendu
+    function subtotal(lines){ return lines.reduce((s,l)=> s + l.price*l.qty, 0); }
 
-    /* ===== Rendu ===== */
     function render(){
-      updateBadge();
       const list = el('list');
       const empty = el('empty');
       list.innerHTML = '';
+      const lines = load();
 
-      const cart = loadCart();
-      if(!cart.length){
+      if (!lines.length){
         empty.style.display = 'block';
         el('subtotal').textContent = '0 €';
-        el('total').textContent    = '0 €';
+        el('total').textContent = '0 €';
         dump(); // debug
         return;
       }
       empty.style.display = 'none';
 
-      cart.forEach((l, i) => {
+      lines.forEach((l, i) => {
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
@@ -243,42 +192,48 @@
         list.appendChild(row);
       });
 
-      const st = subtotal(cart);
+      const st = subtotal(lines);
       el('subtotal').textContent = €(st);
-      el('total').textContent    = €(st);
+      el('total').textContent = €(st);
 
-      list.onclick = (e)=>{
+      // Délégation des actions
+      list.onclick = (e) => {
         const inc = e.target.closest('.inc');
         const dec = e.target.closest('.dec');
         const rm  = e.target.closest('.rm');
-        const c = loadCart();
-        if(inc){ c[+inc.dataset.i].qty += 1; saveCart(c); render(); return; }
-        if(dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); return; }
-        if(rm){  c.splice(+rm.dataset.i,1); saveCart(c); render(); return; }
+        if (!inc && !dec && !rm) return;
+
+        const c = load();
+        if (inc){ c[+inc.dataset.i].qty += 1; save(c); render(); return; }
+        if (dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty - 1); save(c); render(); return; }
+        if (rm){  c.splice(+rm.dataset.i, 1); save(c); render(); return; }
       };
 
       dump(); // debug
     }
 
-    /* ===== Actions globales ===== */
-    el('clear').onclick = ()=>{ localStorage.setItem(CART_KEY, '[]'); render(); };
-
-    // ---- DEBUG (enlève tout ce bloc quand c'est bon) ----
-    // Affiche le panneau debug si on est sur GitHub Pages
-    el('dbg').hidden = false;
-    function dump(){ el('dump').textContent = (localStorage.getItem(CART_KEY)||'[]'); }
-    el('refresh').onclick = dump;
-    el('wipe').onclick = ()=>{ localStorage.removeItem(CART_KEY); render(); };
-    el('seed').onclick = ()=>{
-      const c = loadCart();
+    // ------- Actions globales
+    el('clear').onclick = () => { writeRaw([]); render(); };
+    el('addDemo').onclick = () => {
+      const c = load();
       c.push({
-        id:'demo-sku', name:'Article de test', price:1990, currency:'EUR',
-        image:'https://picsum.photos/seed/demo/600/600', option:'Démo', qty:1
+        id:'demo-article',
+        name:'Article de test',
+        price: 1990,        // 19,90 €
+        currency:'EUR',
+        image:'https://picsum.photos/seed/demo-cart/800/800',
+        option:'Démo',
+        qty: 1
       });
-      saveCart(c); render();
+      save(c); render();
     };
 
-    // Init
+    // ------- Debug panneau
+    function dump(){ el('dump').textContent = localStorage.getItem(KEY) || '[]'; }
+    el('refresh').onclick = dump;
+    el('wipe').onclick = () => { localStorage.removeItem(KEY); render(); };
+
+    // ------- Init
     render();
   </script>
 </body>
