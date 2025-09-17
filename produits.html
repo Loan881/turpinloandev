@@ -2,67 +2,61 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Produit</title>
+  <title>Catalogue produits</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
-    img { max-width: 300px; border-radius: 8px; }
-    .price { font-weight: bold; font-size: 20px; margin-top: 10px; }
-    button { padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+    h1 { margin-bottom: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      background: #fafafa;
+    }
+    .card img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+    .price {
+      font-weight: bold;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
-  <div id="product"></div>
+  <h1>Nos produits</h1>
+  <div id="grid" class="grid"></div>
 
   <script>
-    async function init() {
-      // 1. Récupère l'id dans l'URL (?id=tee-classic)
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-
-      // 2. Charge la liste de produits
-      const res = await fetch("data/products.json");
+    async function loadProducts() {
+      const res = await fetch('data/products.json'); // ✅ chemin relatif
       const products = await res.json();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
 
-      // 3. Trouve le bon produit
-      const product = products.find(p => p.id === id);
-
-      const container = document.getElementById("product");
-      if (!product) {
-        container.innerHTML = "<p>Produit introuvable</p>";
-        return;
-      }
-
-      // 4. Affiche les infos
-      container.innerHTML = `
-        <h1>${product.name}</h1>
-        <img src="${product.image}" alt="${product.name}">
-        <p>${product.description}</p>
-        <div class="price">${(product.price/100).toFixed(2)} €</div>
-        <button id="addCart">Ajouter au panier</button>
-      `;
-
-      // 5. Gestion du panier (dans localStorage)
-      document.getElementById("addCart").onclick = () => {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-        const existing = cart.find(item => item.id === product.id);
-        if (existing) {
-          existing.qty += 1;
-        } else {
-          cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            currency: product.currency,
-            image: product.image,
-            qty: 1
-          });
-        }
-        localStorage.setItem("cart", JSON.stringify(cart));
-        alert("Produit ajouté au panier !");
-      };
+      products.forEach(p => {
+        const card = document.createElement('a');
+        card.href = 'produit.html?id=' + encodeURIComponent(p.id); // ✅ sans slash
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p>${p.description}</p>
+          <div class="price">${(p.price/100).toFixed(2)} €</div>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    init();
+    loadProducts();
   </script>
 </body>
 </html>
+
