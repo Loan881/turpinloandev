@@ -20,7 +20,7 @@
       const id = params.get("id");
 
       // 2. Charge la liste de produits
-      const res = await fetch("/data/products.json");
+      const res = await fetch("data/products.json");
       const products = await res.json();
 
       // 3. Trouve le bon produit
