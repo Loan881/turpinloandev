@@ -5,7 +5,7 @@
   <title>Détail produit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Police -->
+  <!-- Police (optionnel) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -29,6 +29,7 @@
 
     /* Mise en page */
     .container{ width:100%; max-width:var(--container); margin:0 auto; padding:20px }
+    .status{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px; margin:12px 0; display:none; white-space:pre-wrap }
     .grid{ display:grid; gap:24px; grid-template-columns:1fr; }
     @media(min-width:980px){ .grid{ grid-template-columns:1.1fr .9fr } }
 
@@ -50,7 +51,6 @@
     select, input[type="number"]{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit }
     .row{ display:grid; grid-template-columns:1fr 160px; gap:12px; align-items:end }
     .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:900 }
-    .status{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px; margin:12px 0; display:none }
   </style>
 </head>
 <body>
@@ -97,17 +97,18 @@
           </div>
           <button id="add" class="btn" type="button">Ajouter au panier</button>
         </div>
-
-        <div id="hint" class="status" style="display:block">Mise en forme de démonstration avec images aléatoires.</div>
       </aside>
     </div>
   </div>
 
   <script>
-    // ===== Utilitaires =====
+    // ===== Filet de sécurité: afficher toute erreur JS à l'écran =====
+    window.onerror = (m,s,l,c,e)=>{ const t=(e&&e.stack)?e.stack:(m+" @ "+s+":"+l); const S=document.getElementById('status'); S.style.display='block'; S.textContent="Erreur: "+t; };
+    window.onunhandledrejection = (ev)=>{ const S=document.getElementById('status'); S.style.display='block'; S.textContent="Promesse rejetée: "+(ev.reason && ev.reason.stack || ev.reason); };
+
+    // ===== Utils =====
     const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
     const el = id => document.getElementById(id);
-    const setStatus = (msg, show=true)=>{ const s=el('status'); s.innerHTML=msg; s.style.display=show?'block':'none'; };
 
     // ===== Panier (localStorage) =====
     const CART_KEY = 'cart';
@@ -120,19 +121,18 @@
       if (c>0){ badge.textContent = c; badge.style.display='inline-block'; } else { badge.style.display='none'; }
     }
 
-    // ===== Données de DEMO (images aléatoires) =====
+    // ===== Données de DÉMO (images aléatoires) =====
     const PRODUCTS = [
       {
         id:"tee-classic",
         name:"T-shirt Classic",
         description:"Coton 100% filé à l’anneau, coupe unisexe. Impression durable. Idéal pour un look casual.",
-        images:[1,2,3,4,5,6].map(n=>`https://picsum.photos/seed/tee${n}/1000/1000`),
+        images:[1,2,3,4].map(n=>`https://picsum.photos/seed/tee${n}/1000/1000`),
         price:1990,
         currency:"EUR",
         tags:["T-shirt","Unisexe","Coton"],
         variants:[
           {id:"blanc-s", label:"Blanc / S", price:1990},
-          {id:"blanc-m", label:"Blanc / M", price:1990},
           {id:"noir-m",  label:"Noir / M",  price:2090}
         ]
       },
@@ -163,19 +163,18 @@
       }
     ];
 
-    // ===== Initialisation page =====
     (function init(){
       updateCartBadge();
+
+      // 1) Choisir un produit de démo à partir du paramètre ?id=... (sinon tee-classic)
       const params = new URLSearchParams(location.search);
-      const productId = params.get('id') || 'tee-classic'; // défaut pour la démo
-
+      const productId = params.get('id') || 'tee-classic';
       const product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
-      if (!product){ setStatus("Produit introuvable dans la démo."); return; }
 
-      // Afficher la grille
+      // 2) Afficher la grille (si vous ne voyez rien, JS n'a pas tourné → regardez la boîte grise "Erreur")
       el('productGrid').style.display = 'grid';
 
-      // Galerie
+      // 3) Galerie
       const hero = el('hero');
       hero.src = product.images[0];
       hero.alt = product.name;
@@ -186,15 +185,14 @@
         thumbs.appendChild(i);
       });
 
-      // Infos
+      // 4) Infos
       el('name').textContent = product.name;
       el('desc').textContent = product.description;
       el('price').textContent = €(product.price);
-
       const tagsBox = el('tags');
       tagsBox.innerHTML = product.tags.map(t=>`<span class="tag">${t}</span>`).join('');
 
-      // Variantes
+      // 5) Variantes
       const select = el('variant');
       select.innerHTML = '';
       product.variants.forEach(v => select.add(new Option(v.label, v.id)));
@@ -205,7 +203,7 @@
         el('price').textContent = €(selected.price ?? product.price);
       };
 
-      // Ajout panier + redirection
+      // 6) Ajouter au panier + redirection
       el('add').addEventListener('click', () => {
         const qty = Math.max(1, parseInt(el('qty').value || '1', 10));
         const line = {
@@ -222,10 +220,16 @@
         if (idx>=0) cart[idx].qty += qty; else cart.push(line);
         saveCart(cart);
         updateCartBadge();
-        // Redirection immédiate
         location.href = 'panier.html';
       });
     })();
   </script>
+
+  <noscript>
+    <div style="padding:12px;border:1px solid #ddd;margin:12px">
+      Activez JavaScript pour afficher la fiche produit.
+    </div>
+  </noscript>
 </body>
 </html>
+
