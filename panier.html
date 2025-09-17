@@ -189,43 +189,70 @@
 </main>
 
 <script>
-  // ========= Catalogue =========
-  // 1) On essaye de charger 'data/products.json' (chemin RELATIF pour GitHub Pages)
-  // 2) Sinon on bascule sur un fallback local (Picsum)
+  // ====== Catalogue (avec fallback) ======
   const FALLBACK_PRODUCTS = [
     { id: 'tee-classic', name: 'T-shirt Classic', price: 1990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=1' },
     { id: 'hoodie-premium', name: 'Hoodie Premium', price: 3990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=2' },
     { id: 'mug-fun', name: 'Mug Fun', price: 1490, currency: 'EUR', image: 'https://picsum.photos/300/300?random=3' }
   ];
-
   let PRODUCTS = FALLBACK_PRODUCTS;
 
   async function loadProducts() {
     try {
-      const res = await fetch('data/products.json'); // ✅ RELATIF
+      const res = await fetch('data/products.json'); // ✅ RELATIF (GH Pages)
       if (!res.ok) throw new Error('no json');
       PRODUCTS = await res.json();
     } catch (_) {
       PRODUCTS = FALLBACK_PRODUCTS;
     }
   }
-
-  // ========= Panier =========
-  const € = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v/100);
-  const cartKey = 'cart'; // [{id, qty, variantId?, name?, price?, image?}] (on recalcule depuis PRODUCTS si possible)
-
   function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
-  function priceFor(p){ return p.price || 0; }
+  const € = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format((v||0)/100);
 
-  function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
+  // ====== Panier (normalisation + fusion doublons) ======
+  const cartKey = 'cart';
+
+  function loadCartRaw(){
+    try {
+      const data = JSON.parse(localStorage.getItem(cartKey) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
+  }
+  function normalizeLine(l){
+    // Accepte plusieurs formats de lignes {id, name, price, image, option, qty}
+    const id = l.id ?? l.productId ?? l.slug;
+    if (!id) return null;
+    const qty = Math.max(1, parseInt(l.qty || 1, 10));
+    const p = getProduct(id);
+    return {
+      id,
+      name: l.name ?? p?.name ?? id,
+      price: Number.isFinite(l.price) ? l.price : (p?.price ?? 0), // cents
+      currency: (l.currency || p?.currency || 'EUR').toUpperCase(),
+      image: l.image ?? p?.image ?? 'https://picsum.photos/120/120?blur=2',
+      option: l.option ?? l.variant ?? '',
+      qty
+    };
+  }
+  function mergeDuplicates(lines){
+    const map = new Map();
+    for (const l of lines){
+      const key = l.id + '|' + (l.option||'');
+      const prev = map.get(key);
+      if (prev) prev.qty += l.qty;
+      else map.set(key, { ...l });
+    }
+    return Array.from(map.values());
+  }
+  function loadCart(){
+    const raw = loadCartRaw();
+    const norm = raw.map(normalizeLine).filter(Boolean);
+    return mergeDuplicates(norm);
+  }
   function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
 
-  function computeSubtotal(c){
-    return c.reduce((sum, line) => {
-      const p = getProduct(line.id) || line; // fallback si item “ancien format”
-      return sum + (priceFor(p) * (line.qty || 1));
-    }, 0);
-  }
+  // ====== Rendu ======
+  function computeSubtotal(c){ return c.reduce((s,l)=> s + (l.price*l.qty), 0); }
 
   function render(){
     const body = document.getElementById('cart-body');
@@ -244,44 +271,43 @@
     container.style.display = '';
     emptyEl.style.display = 'none';
 
-    cart.forEach((line, i) => {
-      const p = getProduct(line.id) || line; // si le produit n’est plus dans le json, on utilise les infos stockées
-      const price = priceFor(p);
-      const el = document.createElement('div');
-      el.className = 'cart-line';
-      el.innerHTML = `
+    for (let i=0;i<cart.length;i++){
+      const l = cart[i];
+      const row = document.createElement('div');
+      row.className = 'cart-line';
+      row.innerHTML = `
         <div class="cart-item">
-          <div class="thumb"><img src="${p.image || 'https://picsum.photos/120/120?blur=2'}" alt=""></div>
+          <div class="thumb"><img src="${l.image}" alt=""></div>
           <div>
-            <div class="name">${p.name || p.id}</div>
-            ${line.option ? `<div class="muted">Variante : ${line.option}</div>` : ''}
+            <div class="name">${l.name}</div>
+            ${l.option ? `<div class="muted">Variante : ${l.option}</div>` : ''}
           </div>
         </div>
         <div class="qty">
           <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
-          <span>${line.qty || 1}</span>
+          <span>${l.qty}</span>
           <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
         </div>
-        <div><strong>${€(price * (line.qty || 1))}</strong></div>
+        <div><strong>${€(l.price * l.qty)}</strong></div>
         <button class="rm" title="Retirer" data-i="${i}">×</button>
       `;
-      body.appendChild(el);
-    });
+      body.appendChild(row);
+    }
 
     // Totaux
     const subtotal = computeSubtotal(cart);
     document.getElementById('subtotal').textContent = €(subtotal);
-    document.getElementById('total').textContent = €(subtotal); // livraison ajoutée au checkout
+    document.getElementById('total').textContent = €(subtotal); // port ajouté au checkout
 
     // Actions qty/remove
     body.onclick = (e) => {
       const inc = e.target.closest('.inc');
       const dec = e.target.closest('.dec');
-      const rm = e.target.closest('.rm');
+      const rm  = e.target.closest('.rm');
       const c = loadCart();
-      if (inc){ c[+inc.dataset.i].qty = (c[+inc.dataset.i].qty || 1) + 1; saveCart(c); render(); }
-      if (dec){ c[+dec.dataset.i].qty = Math.max(1, (c[+dec.dataset.i].qty || 1) - 1); saveCart(c); render(); }
-      if (rm){ c.splice(+rm.dataset.i, 1); saveCart(c); render(); }
+      if (inc){ c[+inc.dataset.i].qty++; saveCart(c); render(); }
+      if (dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); }
+      if (rm){  c.splice(+rm.dataset.i,1); saveCart(c); render(); }
     };
   }
 
