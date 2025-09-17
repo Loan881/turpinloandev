@@ -6,7 +6,6 @@
     "price": 1990,
     "currency": "EUR",
     "image": "https://picsum.photos/300/300?random=1"
-
   },
   {
     "id": "hoodie-premium",
@@ -14,6 +13,14 @@
     "description": "Molleton doux, capuche doublée.",
     "price": 3990,
     "currency": "EUR",
-    "image": "/images/hoodie-premium.jpg"
+    "image": "https://picsum.photos/300/300?random=2"
+  },
+  {
+    "id": "mug-fun",
+    "name": "Mug Fun",
+    "description": "Céramique blanche, impression haute qualité.",
+    "price": 1490,
+    "currency": "EUR",
+    "image": "https://picsum.photos/300/300?random=3"
   }
 ]
