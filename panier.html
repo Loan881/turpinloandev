@@ -16,8 +16,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;400;600;700;900&display=swap" rel="stylesheet">
 
-  <script src="https://js.stripe.com/v3/"></script>
-
   <style>
     :root{ --bg:#0f1014; --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --accent:#222; --radius:16px; --container: 1100px; --pad-x: 20px; }
     *{ box-sizing:border-box; }
@@ -78,22 +76,6 @@
     .btn.secondary{ background:#fff; color:#111; }
 
     .empty{ text-align:center; padding:40px; border:1px dashed var(--line); border-radius:12px; }
-
-    /* Paiement Stripe */
-    #payment-form{ display:grid; gap:10px; }
-    #card-element{ padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
-    #status{ min-height: 1.4em; color: #0a7; }
-
-    /* Footer */
-    .site-footer{ padding: 20px; background:#fff }
-    .site-footer .divider{ background:#000; opacity:.4 }
-    .footer-top{ display:flex; gap:20px; justify-content:space-around; align-items:flex-start; padding: 10px 0 20px }
-    .footer-title{ font-weight: 700; font-size: 18px; margin: 6px 0 }
-    .footer-links{ display:grid; gap:12px; margin-top:14px }
-    .footer-links a{ font-weight: 600; font-size: 16px }
-    .footer-contact{ width:min(800px, 100%); margin: 0 auto; text-align:center; padding: 0 20px 20px }
-    .footer-contact .line{ font-size: 16px; display:flex; gap:8px; justify-content:center }
-    .credit{ width:220px; margin: 20px auto 0 }
   </style>
 </head>
 <body>
@@ -151,25 +133,21 @@
         <div id="cart-body"></div>
       </section>
 
-      <!-- Récap & Paiement -->
+      <!-- Récap & Actions -->
       <aside class="summary">
         <div class="row"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
         <div class="row muted"><span>Frais de port</span><span id="shipping">Calculés à l'étape suivante</span></div>
         <div class="row total"><span>Total</span><span id="total">0 €</span></div>
-        <button id="clear" class="btn secondary">Vider le panier</button>
-        <hr class="divider" aria-hidden="true">
-        <form id="payment-form">
-          <input type="email" id="email" placeholder="Email" required />
-          <div id="card-element"><!-- Stripe Elements --></div>
-          <button id="pay" type="submit" class="btn">Payer avec Stripe</button>
-          <div id="status"></div>
-        </form>
-        <div class="muted" style="font-size:12px">Paiement sécurisé 3D Secure. Taxes incluses. En cas d'échec serveur, configure d'abord l'API `/api/create-payment-intent` comme dans le starter.</div>
+        <div style="display:grid; gap:10px; margin-top:6px">
+          <button id="clear" class="btn secondary">Vider le panier</button>
+          <a class="btn" href="checkout.html">Aller au paiement</a>
+        </div>
+        <p class="muted" style="font-size:12px;margin:8px 0 0">Le paiement se fait sur la page <strong>checkout.html</strong> (Stripe). Cette page-ci ne tente plus d’appeler d’API serveur.</p>
       </aside>
     </div>
 
     <div id="empty" class="empty" style="display:none">
-      Votre panier est vide. <a href="/loanturpin/merchandising" style="text-decoration:underline">Découvrir les produits</a>
+      Votre panier est vide. <a href="merchandising" style="text-decoration:underline">Découvrir les produits</a>
     </div>
   </div>
 
@@ -201,7 +179,7 @@
     <div class="footer-contact">
       <h5 class="footer-title">Contact Me</h5>
       <hr class="divider" aria-hidden="true">
-      <p class="line"><span>E‑Mail :</span> <a href="mailto:t.loan.contact@gmail.com">t.loan.contact@gmail.com</a></p>
+      <p class="line"><span>E-Mail :</span> <a href="mailto:t.loan.contact@gmail.com">t.loan.contact@gmail.com</a></p>
       <div class="credit">
         <hr class="divider thin" aria-hidden="true">
         <p>© 2025 TURPIN Loan</p>
@@ -211,37 +189,41 @@
 </main>
 
 <script>
-  // ========= Config produits =========
-  // Essaie d'abord de charger products.json (si tu l'as déployé). Sinon fallback sur ce catalogue minimal.
+  // ========= Catalogue =========
+  // 1) On essaye de charger 'data/products.json' (chemin RELATIF pour GitHub Pages)
+  // 2) Sinon on bascule sur un fallback local (Picsum)
   const FALLBACK_PRODUCTS = [
-    { id: 'affiche-soleil-a3', name: 'Affiche « Soleil » — A3', price: 3900, currency: 'eur', image: 'images/products/affiche-soleil-a3.jpg', variants:[{id:'a3',label:'A3'},{id:'a2',label:'A2', price:4900}] },
-    { id: 'tshirt-constellation-m', name: 'T‑shirt « Constellation »', price: 2900, currency: 'eur', image: 'images/products/tshirt-constellation.jpg' }
+    { id: 'tee-classic', name: 'T-shirt Classic', price: 1990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=1' },
+    { id: 'hoodie-premium', name: 'Hoodie Premium', price: 3990, currency: 'EUR', image: 'https://picsum.photos/300/300?random=2' },
+    { id: 'mug-fun', name: 'Mug Fun', price: 1490, currency: 'EUR', image: 'https://picsum.photos/300/300?random=3' }
   ];
 
   let PRODUCTS = FALLBACK_PRODUCTS;
-  fetch('/products.json').then(r => r.ok ? r.json() : Promise.reject()).then(json => { PRODUCTS = json; render(); }).catch(() => render());
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('data/products.json'); // ✅ RELATIF
+      if (!res.ok) throw new Error('no json');
+      PRODUCTS = await res.json();
+    } catch (_) {
+      PRODUCTS = FALLBACK_PRODUCTS;
+    }
+  }
 
   // ========= Panier =========
   const € = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v/100);
-  const cartKey = 'cart'; // [{id, qty, variantId?}]
+  const cartKey = 'cart'; // [{id, qty, variantId?, name?, price?, image?}] (on recalcule depuis PRODUCTS si possible)
 
   function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
-  function priceFor(p, variantId){
-    let price = p.price;
-    if (variantId && Array.isArray(p.variants)){
-      const v = p.variants.find(v => v.id === variantId);
-      if (v && v.price) price = v.price;
-    }
-    return price;
-  }
+  function priceFor(p){ return p.price || 0; }
 
   function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
   function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
 
   function computeSubtotal(c){
     return c.reduce((sum, line) => {
-      const p = getProduct(line.id); if (!p) return sum;
-      return sum + priceFor(p, line.variantId) * line.qty;
+      const p = getProduct(line.id) || line; // fallback si item “ancien format”
+      return sum + (priceFor(p) * (line.qty || 1));
     }, 0);
   }
 
@@ -263,25 +245,24 @@
     emptyEl.style.display = 'none';
 
     cart.forEach((line, i) => {
-      const p = getProduct(line.id); if (!p) return;
-      const price = priceFor(p, line.variantId);
+      const p = getProduct(line.id) || line; // si le produit n’est plus dans le json, on utilise les infos stockées
+      const price = priceFor(p);
       const el = document.createElement('div');
       el.className = 'cart-line';
-      const variantLabel = line.variantId && p.variants ? (p.variants.find(v => v.id===line.variantId)?.label || line.variantId) : '';
       el.innerHTML = `
         <div class="cart-item">
-          <div class="thumb"><img src="${p.image}" alt="${p.name}"></div>
+          <div class="thumb"><img src="${p.image || 'https://picsum.photos/120/120?blur=2'}" alt=""></div>
           <div>
-            <div class="name">${p.name}</div>
-            ${variantLabel ? `<div class="muted">Variante : ${variantLabel}</div>` : ''}
+            <div class="name">${p.name || p.id}</div>
+            ${line.option ? `<div class="muted">Variante : ${line.option}</div>` : ''}
           </div>
         </div>
         <div class="qty">
-          <button class="dec" data-i="${i}">−</button>
-          <span>${line.qty}</span>
-          <button class="inc" data-i="${i}">+</button>
+          <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
+          <span>${line.qty || 1}</span>
+          <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
         </div>
-        <div><strong>${€(price * line.qty)}</strong></div>
+        <div><strong>${€(price * (line.qty || 1))}</strong></div>
         <button class="rm" title="Retirer" data-i="${i}">×</button>
       `;
       body.appendChild(el);
@@ -290,7 +271,7 @@
     // Totaux
     const subtotal = computeSubtotal(cart);
     document.getElementById('subtotal').textContent = €(subtotal);
-    document.getElementById('total').textContent = €(subtotal); // sans frais de port
+    document.getElementById('total').textContent = €(subtotal); // livraison ajoutée au checkout
 
     // Actions qty/remove
     body.onclick = (e) => {
@@ -298,59 +279,19 @@
       const dec = e.target.closest('.dec');
       const rm = e.target.closest('.rm');
       const c = loadCart();
-      if (inc){ c[+inc.dataset.i].qty++; saveCart(c); render(); }
-      if (dec){ c[+dec.dataset.i].qty = Math.max(1, c[+dec.dataset.i].qty-1); saveCart(c); render(); }
+      if (inc){ c[+inc.dataset.i].qty = (c[+inc.dataset.i].qty || 1) + 1; saveCart(c); render(); }
+      if (dec){ c[+dec.dataset.i].qty = Math.max(1, (c[+dec.dataset.i].qty || 1) - 1); saveCart(c); render(); }
       if (rm){ c.splice(+rm.dataset.i, 1); saveCart(c); render(); }
     };
   }
 
   document.getElementById('clear').onclick = () => { localStorage.setItem(cartKey, '[]'); render(); };
 
-  // ========= Paiement Stripe (Elements + PaymentIntent côté serveur) =========
-  const stripe = Stripe('pk_test_REMPLACE_MOI'); // Ta clé publique Stripe (test)
-  let elements = stripe.elements();
-  const card = elements.create('card');
-  card.mount('#card-element');
-
-  async function createPaymentIntent(email){
-    const cart = loadCart();
-    const res = await fetch('/api/create-payment-intent', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, email })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur serveur paiement');
-    return data.clientSecret;
-  }
-
-  document.getElementById('payment-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('status');
-    const btn = document.getElementById('pay');
-    const email = document.getElementById('email').value.trim();
-    const cart = loadCart();
-    if (!cart.length){ status.textContent = 'Panier vide.'; return; }
-    btn.disabled = true; status.textContent = 'Création du paiement…';
-    try{
-      const clientSecret = await createPaymentIntent(email);
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card, billing_details: { email } }
-      });
-      if (error){ status.textContent = error.message || 'Paiement refusé.'; btn.disabled = false; return; }
-      if (paymentIntent.status === 'succeeded'){
-        status.textContent = 'Merci ! Paiement réussi.';
-        localStorage.setItem(cartKey, '[]');
-        render();
-      } else {
-        status.textContent = 'Statut: ' + paymentIntent.status;
-      }
-    } catch(err){
-      status.textContent = err.message + '\nAstuce: vérifie que ton serveur Express est en route et que /api/create-payment-intent répond.';
-    } finally { btn.disabled = false; }
-  });
-
-  // Init render au chargement
-  window.addEventListener('DOMContentLoaded', render);
+  // Init
+  (async function(){
+    await loadProducts();
+    render();
+  })();
 </script>
 </body>
 </html>
