@@ -15,10 +15,10 @@
     *{ box-sizing:border-box }
     body{ margin:0; font-family:"Playfair Display",serif; color:var(--ink); background:var(--paper) }
     a{ color:inherit; text-decoration:none }
-    .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px 20px 60px }
     header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff; z-index:5 }
     .title{ font-weight:900; font-size:20px }
     .link{ font-weight:700 }
+    .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px 20px 60px }
     .grid{ display:grid; gap:24px; grid-template-columns:1fr; margin-top:20px }
     @media(min-width:980px){ .grid{ grid-template-columns:1.2fr .8fr } }
     .gallery{ display:grid; gap:12px; align-content:start }
@@ -28,15 +28,17 @@
     .thumbs img{ width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid var(--line); border-radius:8px; cursor:pointer }
     .card{ border:1px solid var(--line); border-radius:12px; padding:16px; }
     .name{ font-weight:900; font-size:26px; margin:0 0 8px }
-    .desc{ color:var(--muted); margin:0 0 12px }
+    .desc{ color:var(--muted); margin:0 0 12px; line-height:1.55 }
     .price{ font-weight:900; font-size:22px; margin:6px 0 12px }
     .field{ display:grid; gap:6px; margin:10px 0 }
     label{ font-weight:700; font-size:14px }
     select, input[type="number"]{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit }
-    .row{ display:grid; grid-template-columns:1fr 120px; gap:12px; align-items:end }
+    .row{ display:grid; grid-template-columns:1fr 150px; gap:12px; align-items:end }
     .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:900 }
     .muted{ color:var(--muted); font-size:12px }
-    .alert{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px }
+    .alert{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px; margin-bottom:12px }
+    .tags{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 0 }
+    .tag{ font-size:12px; border:1px solid var(--line); padding:4px 8px; border-radius:999px; color:#333; background:#fff }
   </style>
 </head>
 <body>
@@ -58,6 +60,8 @@
       <aside class="card" id="panel">
         <h1 class="name" id="name">—</h1>
         <p class="desc" id="desc"></p>
+        <div class="tags" id="tags" style="display:none"></div>
+
         <div class="price" id="price">—</div>
 
         <div class="field" id="variantField" style="display:none">
@@ -73,17 +77,72 @@
           <button id="add" class="btn">Ajouter au panier</button>
         </div>
 
-        <p class="muted">Paiement et frais de port calculés au checkout.</p>
+        <p class="muted">Paiement sécurisé sur la page checkout. Les frais de port sont calculés à l'étape suivante.</p>
       </aside>
     </div>
   </div>
 
   <script>
-    // === Utils ===
+    // ========= Utils =========
     const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
     const byPref = (...xs) => xs.find(Boolean);
+    const el = id => document.getElementById(id);
+    function setStatus(msg, show=true){ const s=el('status'); s.textContent=msg; s.style.display = show?'block':'none'; }
 
-    // Normalise une variante venant de différents schémas possibles
+    // ========= Fallback (si data/products.json indisponible) =========
+    const FALLBACK_PRODUCTS = [
+      {
+        id: "tee-classic",
+        name: "T-shirt Classic",
+        description: "Coton 100% filé à l’anneau, coupe unisexe. Impression durable. Idéal pour un look casual.",
+        images: [
+          "https://picsum.photos/seed/tee1/1000/1000",
+          "https://picsum.photos/seed/tee2/1000/1000",
+          "https://picsum.photos/seed/tee3/1000/1000",
+          "https://picsum.photos/seed/tee4/1000/1000"
+        ],
+        price: 1990,
+        currency: "EUR",
+        tags: ["T-shirt", "Unisexe", "Coton"],
+        variants: [
+          { id:"white-s",  label:"Blanc / S",  price:1990, image:"https://picsum.photos/seed/tee-white/1000/1000" },
+          { id:"white-m",  label:"Blanc / M",  price:1990 },
+          { id:"black-m",  label:"Noir / M",   price:2090, image:"https://picsum.photos/seed/tee-black/1000/1000" },
+          { id:"black-l",  label:"Noir / L",   price:2090 }
+        ]
+      },
+      {
+        id: "hoodie-premium",
+        name: "Hoodie Premium",
+        description: "Molleton doux, capuche doublée, poche kangourou. Parfait pour les soirées fraîches.",
+        images: [
+          "https://picsum.photos/seed/hoodie1/1000/1000",
+          "https://picsum.photos/seed/hoodie2/1000/1000"
+        ],
+        price: 3990,
+        currency: "EUR",
+        tags: ["Hoodie", "Confort"],
+        variants: [
+          { id:"black-m", label:"Noir / M", price:3990 },
+          { id:"black-l", label:"Noir / L", price:3990 },
+          { id:"grey-m",  label:"Gris / M", price:4090 }
+        ]
+      },
+      {
+        id: "mug-fun",
+        name: "Mug Fun",
+        description: "Céramique blanche 325 ml, compatible lave-vaisselle. Impression haute qualité.",
+        images: [
+          "https://picsum.photos/seed/mug1/1000/1000",
+          "https://picsum.photos/seed/mug2/1000/1000"
+        ],
+        price: 1490,
+        currency: "EUR",
+        tags: ["Mug", "Céramique"]
+      }
+    ];
+
+    // Normalise une variante
     function normalizeVariant(v){
       if (!v) return null;
       const id = byPref(v.id, v.variantId, v.sku, v.external_id, v.name);
@@ -101,60 +160,57 @@
       return { id: String(id), label: String(label), price, image };
     }
 
-    // === Lecture du produit ===
+    // ========= Lecture de l'ID & chargement du produit =========
     const params = new URLSearchParams(location.search);
-    const productId = params.get('id');
-
-    const el = (id)=>document.getElementById(id);
-    const statusEl = el('status');
-    function setStatus(msg, show=true){ statusEl.textContent = msg; statusEl.style.display = show?'block':'none'; }
+    const productId = params.get('id') || 'tee-classic'; // défaut utile
 
     let PRODUCT = null;
     let VARIANTS = [];
-    let SELECTED = null; // variante sélectionnée normalisée {id,label,price,image}
+    let SELECTED = null;
 
     async function loadProduct(){
-      if (!productId){ setStatus("Pas d'id dans l'URL. Exemple : produit.html?id=tee-classic"); return; }
       let products = [];
-      try{
-        const res = await fetch('data/products.json'); // chemin relatif (GitHub Pages)
-        if (!res.ok) throw new Error('404 products.json');
+      try {
+        const res = await fetch('data/products.json'); // chemin RELATIF (GitHub Pages)
+        if (!res.ok) throw new Error('404');
         products = await res.json();
-      }catch(e){
-        // Fallback de secours
-        products = [
-          { id:'tee-classic', name:'T-shirt Classic', description:'Coton 100%.', price:1990, currency:'EUR', image:'https://picsum.photos/600/600?random=1' }
-        ];
+      } catch {
+        products = FALLBACK_PRODUCTS;
       }
 
       PRODUCT = products.find(p => String(p.id) === String(productId));
       if (!PRODUCT){
-        setStatus(`Produit introuvable (id=${productId}). IDs dispos : ${products.map(p=>p.id).join(', ')}`);
+        setStatus(`Produit introuvable (id=${productId}). IDs disponibles : ${products.map(p=>p.id).join(', ')}`);
         return;
       }
 
-      // Images
+      // Galerie images
       const images = Array.isArray(PRODUCT.images) && PRODUCT.images.length ? PRODUCT.images
                    : PRODUCT.image ? [PRODUCT.image]
-                   : ['https://picsum.photos/800/800?blur=2'];
+                   : ['https://picsum.photos/seed/fallback/1000/1000'];
       el('hero').src = images[0];
       el('hero').alt = PRODUCT.name || PRODUCT.id;
 
-      const thumbs = el('thumbs');
-      thumbs.innerHTML = '';
+      const thumbs = el('thumbs'); thumbs.innerHTML = '';
       images.slice(0,6).forEach(src=>{
-        const i = document.createElement('img');
-        i.src = src; i.alt = '';
+        const i = document.createElement('img'); i.src = src; i.alt = '';
         i.onclick = ()=>{ el('hero').src = src; };
         thumbs.appendChild(i);
       });
 
-      // Texte & prix
+      // Texte / tags / prix
       el('name').textContent = PRODUCT.name || PRODUCT.id;
       el('desc').textContent = PRODUCT.description || '';
-      el('price').textContent = €(PRODUCT.price || 0);
+      const tags = Array.isArray(PRODUCT.tags) ? PRODUCT.tags : [];
+      const tagsBox = el('tags');
+      if (tags.length){
+        tagsBox.style.display = 'flex';
+        tagsBox.innerHTML = tags.map(t=>`<span class="tag">${t}</span>`).join('');
+      } else {
+        tagsBox.style.display = 'none';
+      }
 
-      // Variantes (optionnel)
+      // Variantes
       VARIANTS = Array.isArray(PRODUCT.variants) ? PRODUCT.variants.map(normalizeVariant).filter(Boolean) : [];
       const variantField = el('variantField');
       const variantSelect = el('variant');
@@ -162,13 +218,10 @@
       if (VARIANTS.length){
         variantField.style.display = 'block';
         variantSelect.innerHTML = '';
-        VARIANTS.forEach(v=>{
-          const opt = new Option(v.label, v.id);
-          variantSelect.add(opt);
-        });
-        // Sélection par défaut
+        VARIANTS.forEach(v => variantSelect.add(new Option(v.label, v.id)));
         SELECTED = VARIANTS[0];
-        if (SELECTED?.price) el('price').textContent = €(SELECTED.price);
+        el('price').textContent = €(byPref(SELECTED?.price, PRODUCT.price, 0));
+        if (SELECTED?.image) el('hero').src = SELECTED.image;
 
         variantSelect.onchange = () => {
           const v = VARIANTS.find(x => x.id === variantSelect.value);
@@ -180,12 +233,13 @@
       } else {
         SELECTED = null;
         variantField.style.display = 'none';
+        el('price').textContent = €(PRODUCT.price || 0);
       }
 
       setStatus('', false);
     }
 
-    // === Panier ===
+    // ========= Panier =========
     const cartKey = 'cart';
     function loadCart(){ try{return JSON.parse(localStorage.getItem(cartKey)||'[]')}catch{return[]} }
     function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)); }
@@ -195,14 +249,15 @@
       const qty = Math.max(1, parseInt(el('qty').value || '1', 10));
       const price = byPref(SELECTED?.price, PRODUCT.price, 0);
       const option = SELECTED ? SELECTED.label : '';
+      const image = byPref(SELECTED?.image, Array.isArray(PRODUCT.images)&&PRODUCT.images[0], PRODUCT.image);
 
       const line = {
         id: PRODUCT.id,
-        name: PRODUCT.name + (option ? ' — ' + option : ''),
-        price, // en centimes
+        name: PRODUCT.name,               // nom “pur”
+        price,                            // en centimes
         currency: (PRODUCT.currency || 'EUR').toUpperCase(),
-        image: byPref(SELECTED?.image, Array.isArray(PRODUCT.images)&&PRODUCT.images[0], PRODUCT.image),
-        option,
+        image,
+        option,                           // ex: "Noir / M"
         qty
       };
 
@@ -212,7 +267,7 @@
       else cart.push(line);
       saveCart(cart);
 
-      // Redirection immédiate vers le panier (chemin relatif)
+      // Redirection immédiate vers le panier
       window.location.href = 'panier.html';
     }
 
