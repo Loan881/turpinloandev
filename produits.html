@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Catalogue produits</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    h1 { margin-bottom: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+    }
+    .card img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+    .price {
+      font-weight: bold;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Nos produits</h1>
+  <div id="grid" class="grid"></div>
+
+  <script>
+    async function loadProducts() {
+      const res = await fetch('/data/products.json');
+      const products = await res.json();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      products.forEach(p => {
+        const card = document.createElement('a');
+        card.href = '/produit.html?id=' + encodeURIComponent(p.id);
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p>${p.description}</p>
+          <div class="price">${(p.price/100).toFixed(2)} €</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
