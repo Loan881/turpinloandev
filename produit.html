@@ -2,21 +2,18 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>Détail produit</title>
+  <title>Produit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Police (optionnel) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
-
   <style>
-    :root{ --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --container:1100px; }
+    :root{ --ink:#0b0c10; --paper:#fff; --muted:#636570; --line:#d7d9e0; --container:1100px; }
     *{ box-sizing:border-box }
     body{ margin:0; font-family:"Playfair Display",serif; color:var(--ink); background:var(--paper) }
     a{ color:inherit; text-decoration:none }
 
-    /* Header + icône panier */
+    /* Header + icone panier */
     header{ position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--line); }
     .bar{ height:60px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 16px }
     .left{ justify-self:start }
@@ -27,9 +24,7 @@
     .cart-btn svg{ width:20px; height:20px }
     .badge{ position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:#111; color:#fff; font-size:11px; line-height:18px; text-align:center; font-weight:900; }
 
-    /* Mise en page */
     .container{ width:100%; max-width:var(--container); margin:0 auto; padding:20px }
-    .status{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px; margin:12px 0; display:none; white-space:pre-wrap }
     .grid{ display:grid; gap:24px; grid-template-columns:1fr; }
     @media(min-width:980px){ .grid{ grid-template-columns:1.1fr .9fr } }
 
@@ -51,6 +46,8 @@
     select, input[type="number"]{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit }
     .row{ display:grid; grid-template-columns:1fr 160px; gap:12px; align-items:end }
     .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:900 }
+
+    .status{ padding:12px; border-radius:10px; background:#f7f7f8; border:1px dashed #d0d0d5; font-size:14px; margin:12px 0; display:none; white-space:pre-wrap }
   </style>
 </head>
 <body>
@@ -92,7 +89,7 @@
 
         <div class="row">
           <div class="field">
-            <label for="qty">Quantité</label>
+            <label for="qty">Quantite</label>
             <input id="qty" type="number" min="1" value="1">
           </div>
           <button id="add" class="btn" type="button">Ajouter au panier</button>
@@ -102,15 +99,15 @@
   </div>
 
   <script>
-    // ===== Filet de sécurité: afficher toute erreur JS à l'écran =====
+    // Affiche toute erreur JS a l'ecran (debug visuel)
     window.onerror = (m,s,l,c,e)=>{ const t=(e&&e.stack)?e.stack:(m+" @ "+s+":"+l); const S=document.getElementById('status'); S.style.display='block'; S.textContent="Erreur: "+t; };
-    window.onunhandledrejection = (ev)=>{ const S=document.getElementById('status'); S.style.display='block'; S.textContent="Promesse rejetée: "+(ev.reason && ev.reason.stack || ev.reason); };
+    window.onunhandledrejection = (ev)=>{ const S=document.getElementById('status'); S.style.display='block'; S.textContent="Promesse rejetee: "+(ev.reason && ev.reason.stack || ev.reason); };
 
-    // ===== Utils =====
-    const € = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((v||0)/100);
+    // Utils
+    const formatEUR = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format((v||0)/100);
     const el = id => document.getElementById(id);
 
-    // ===== Panier (localStorage) =====
+    // Panier (localStorage)
     const CART_KEY = 'cart';
     const loadCart = () => { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; } };
     const saveCart = (c) => localStorage.setItem(CART_KEY, JSON.stringify(c));
@@ -121,12 +118,12 @@
       if (c>0){ badge.textContent = c; badge.style.display='inline-block'; } else { badge.style.display='none'; }
     }
 
-    // ===== Données de DÉMO (images aléatoires) =====
+    // Donnees DEMO (images aleatoires)
     const PRODUCTS = [
       {
         id:"tee-classic",
         name:"T-shirt Classic",
-        description:"Coton 100% filé à l’anneau, coupe unisexe. Impression durable. Idéal pour un look casual.",
+        description:"Coton 100% file a l'anneau, coupe unisexe. Impression durable. Ideal pour un look casual.",
         images:[1,2,3,4].map(n=>`https://picsum.photos/seed/tee${n}/1000/1000`),
         price:1990,
         currency:"EUR",
@@ -139,7 +136,7 @@
       {
         id:"hoodie-premium",
         name:"Hoodie Premium",
-        description:"Molleton doux, capuche doublée et poche kangourou — parfait pour les soirées fraîches.",
+        description:"Molleton doux, capuche doublee et poche kangourou.",
         images:[1,2,3].map(n=>`https://picsum.photos/seed/hoodie${n}/1000/1000`),
         price:3990,
         currency:"EUR",
@@ -152,11 +149,11 @@
       {
         id:"mug-fun",
         name:"Mug Fun",
-        description:"Céramique 325 ml, compatible lave-vaisselle. Impression haute qualité.",
+        description:"Ceramique 325 ml, lave-vaisselle ok. Impression haute qualite.",
         images:[1,2].map(n=>`https://picsum.photos/seed/mug${n}/1000/1000`),
         price:1490,
         currency:"EUR",
-        tags:["Mug","Céramique"],
+        tags:["Mug","Ceramique"],
         variants:[
           {id:"blanc-unique", label:"Blanc / Taille unique", price:1490}
         ]
@@ -166,15 +163,15 @@
     (function init(){
       updateCartBadge();
 
-      // 1) Choisir un produit de démo à partir du paramètre ?id=... (sinon tee-classic)
+      // Choix du produit (id dans l'URL, sinon tee-classic)
       const params = new URLSearchParams(location.search);
       const productId = params.get('id') || 'tee-classic';
       const product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
 
-      // 2) Afficher la grille (si vous ne voyez rien, JS n'a pas tourné → regardez la boîte grise "Erreur")
+      // Afficher la grille
       el('productGrid').style.display = 'grid';
 
-      // 3) Galerie
+      // Galerie
       const hero = el('hero');
       hero.src = product.images[0];
       hero.alt = product.name;
@@ -185,14 +182,14 @@
         thumbs.appendChild(i);
       });
 
-      // 4) Infos
+      // Infos
       el('name').textContent = product.name;
       el('desc').textContent = product.description;
-      el('price').textContent = €(product.price);
+      el('price').textContent = formatEUR(product.price);
       const tagsBox = el('tags');
       tagsBox.innerHTML = product.tags.map(t=>`<span class="tag">${t}</span>`).join('');
 
-      // 5) Variantes
+      // Variantes
       const select = el('variant');
       select.innerHTML = '';
       product.variants.forEach(v => select.add(new Option(v.label, v.id)));
@@ -200,19 +197,19 @@
 
       select.onchange = () => {
         selected = product.variants.find(v => v.id === select.value) || selected;
-        el('price').textContent = €(selected.price ?? product.price);
+        el('price').textContent = formatEUR(selected.price ?? product.price);
       };
 
-      // 6) Ajouter au panier + redirection
+      // Ajouter au panier + redirection
       el('add').addEventListener('click', () => {
         const qty = Math.max(1, parseInt(el('qty').value || '1', 10));
         const line = {
           id: product.id,
           name: product.name,
-          price: (selected?.price ?? product.price),
+          price: (selected && selected.price != null ? selected.price : product.price),
           currency: (product.currency || 'EUR').toUpperCase(),
           image: hero.src,
-          option: selected?.label || '',
+          option: selected ? selected.label : '',
           qty
         };
         const cart = loadCart();
@@ -220,16 +217,10 @@
         if (idx>=0) cart[idx].qty += qty; else cart.push(line);
         saveCart(cart);
         updateCartBadge();
+        // Redirection immediate
         location.href = 'panier.html';
       });
     })();
   </script>
-
-  <noscript>
-    <div style="padding:12px;border:1px solid #ddd;margin:12px">
-      Activez JavaScript pour afficher la fiche produit.
-    </div>
-  </noscript>
 </body>
 </html>
-
