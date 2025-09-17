@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Détail produit</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    img { max-width: 300px; border-radius: 8px; }
+    .price { font-weight: bold; font-size: 20px; margin-top: 10px; }
+    button { padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="product"></div>
+
+  <script>
+    async function init() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      console.log("URL id =", id);
+
+      const res = await fetch('data/products.json');
+      const products = await res.json();
+      console.log("Products =", products);
+
+      const product = products.find(p => String(p.id) === String(id));
+
+      const container = document.getElementById("product");
+
+      if (!product) {
+        container.innerHTML = `<p><strong>Produit introuvable</strong> (id=${id})</p>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <h1>${product.name}</h1>
+        <img src="${product.image}" alt="${product.name}">
+        <p>${product.description}</p>
+        <div class="price">${(product.price/100).toFixed(2)} €</div>
+        <button id="addCart">Ajouter au panier</button>
+      `;
+
+      document.getElementById("addCart").onclick = () => {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+        const existing = cart.find(item => item.id === product.id);
+        if (existing) {
+          existing.qty += 1;
+        } else {
+          cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            currency: product.currency,
+            image: product.image,
+            qty: 1
+          });
+        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        alert("Produit ajouté au panier !");
+      };
+    }
+
+    init();
+  </script>
+</body>
+</html>
