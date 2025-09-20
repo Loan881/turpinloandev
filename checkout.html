@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- Stripe.js v3 -->
   <script src="https://js.stripe.com/v3/"></script>
 
   <style>
@@ -35,7 +37,7 @@
     .muted-small{ color:var(--muted); font-size:12px }
     .cart-lines{ display:grid; gap:12px }
     .line{ display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center }
-    .debug{ font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; background:#f7f7f8; border:1px dashed #d0d0d5; padding:8px; border-radius:8px; }
+    .debug{ font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; background:#f7f7f8; border:1px dashed #d0d0d5; padding:8px; border-radius:8px; }
   </style>
 </head>
 <body>
@@ -50,7 +52,7 @@
     <p class="muted">Renseigne tes informations, choisis la livraison et paie en toute sécurité.</p>
 
     <div class="grid">
-      <!-- Colonne gauche: informations client & paiement -->
+      <!-- Colonne gauche: infos + paiement -->
       <section class="card">
         <h2 class="section-title">Informations client</h2>
         <form id="checkout-form">
@@ -117,7 +119,6 @@
           <h3 class="section-title">Paiement</h3>
           <div id="payment-element"></div>
 
-          <!-- ✅ Nouveau : enregistrer la carte -->
           <div class="field">
             <label style="display:flex; gap:8px; align-items:center">
               <input id="saveCard" type="checkbox">
@@ -151,178 +152,180 @@
     </div>
   </div>
 
-<script>
-  // === CONFIG ===
-  // ➜ Laisse API_BASE vide pour cibler ton propre domaine (ex: ton-site.vercel.app)
-  //    Si tu veux cibler un backend externe, mets l'URL complète (https://...)
- <script>
-  // === CONFIG ===
-  const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ton backend
-  const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ utilise une clé TEST en dev
+  <script>
+    // === CONFIG ===
+    const API_BASE = 'https://stripe-backend-ivory.vercel.app';   // ← remplace par TON domaine Vercel
+    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';  // ← ta clé publiable (test)
 
-  const stripe = Stripe(STRIPE_PK);
-  let elements, paymentElement, clientSecret;
+    // Stripe
+    const stripe = Stripe(STRIPE_PK, { locale: 'fr' });
+    let elements, paymentElement, clientSecret;
 
-  // --- Helpers ---
-  const debugEl = () => document.getElementById('debug');
-  function logDebug(msg, data){
-    const el = debugEl();
-    el.hidden = false;
-    const line = document.createElement('div');
-    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg} ${data ? JSON.stringify(data) : ''}`;
-    el.appendChild(line);
-    console.log('[checkout]', msg, data || '');
-  }
-
-  function apiUrl(path){
-    if (!API_BASE) return path; // même origine
-    return API_BASE.replace(/\/$/, '') + path; // concat propre
-  }
-
-  async function apiPost(path, body){
-    logDebug('POST ' + path, body);
-    const res = await fetch(apiUrl(path), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body || {})
-    });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch { json = { raw:text }; }
-    logDebug('Response ' + res.status + ' ' + path, json);
-    if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
-    return json;
-  }
-
-  const formatEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v / 100);
-  const cartKey = 'cart';
-  function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
-
-  async function renderCart(){
-    const cartEl = document.getElementById('cart');
-    const subtotalEl = document.getElementById('subtotal');
-    const totalEl = document.getElementById('total');
-
-    const cart = loadCart();
-    cartEl.innerHTML = '';
-    if (!cart.length){
-      cartEl.innerHTML = '<div class="muted">Votre panier est vide.</div>';
-    } else {
-      for (const line of cart){
-        const item = document.createElement('div');
-        item.className = 'line';
-        item.innerHTML = `<div>${line.id} ${line.variantId ? `— <span class="muted">${line.variantId}</span>` : ''} × ${line.qty}</div><div></div>`;
-        cartEl.appendChild(item);
-      }
+    // --- Helpers ---
+    const debugEl = () => document.getElementById('debug');
+    function logDebug(msg, data){
+      const el = debugEl();
+      el.hidden = false;
+      const line = document.createElement('div');
+      line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg + (data ? ' ' + JSON.stringify(data) : '');
+      el.appendChild(line);
+      console.log('[checkout]', msg, data || '');
     }
-    subtotalEl.textContent = '—';
-    totalEl.textContent = '—';
-  }
+    function apiUrl(path){ return (API_BASE ? API_BASE.replace(/\/$/, '') : '') + path; }
 
-  function collectCustomer(){
-    return {
-      email: document.getElementById('email').value.trim(),
-      firstName: document.getElementById('firstName').value.trim(),
-      lastName: document.getElementById('lastName').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      address: {
-        line1: document.getElementById('line1').value.trim(),
-        line2: document.getElementById('line2').value.trim(),
-        city: document.getElementById('city').value.trim(),
-        postal_code: document.getElementById('postal_code').value.trim(),
-        country: document.getElementById('country').value
-      },
-      shipping_method: document.getElementById('shipping_method').value
-    };
-  }
-
-  // ✅ Crée un PaymentIntent via /api/create-payment-intent (même domaine par défaut)
-  async function createIntentWithCustomer(){
-    const cart = loadCart();
-    const customer = collectCustomer();
-    const saveCard = document.getElementById('saveCard').checked;
-
-    // Permettre la création même si panier vide en mode debug bouton "Créer PI"
-    if (!cart.length) logDebug('Attention: panier vide — la création PI peut échouer côté backend.');
-
-    const data = await apiPost('/api/create-payment-intent', {
-      cart,
-      email: customer.email,
-      customer,
-      saveCard
-    });
-    return data.clientSecret;
-  }
-
-  async function mountPaymentElement(){
-    clientSecret = await createIntentWithCustomer();
-    if (!clientSecret) throw new Error('clientSecret manquant');
-    elements = stripe.elements({ clientSecret });
-    const options = {}; // add appearance si besoin
-    paymentElement = elements.create('payment', options);
-    paymentElement.mount('#payment-element');
-    logDebug('Payment Element monté');
-  }
-
-  document.getElementById('checkout-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('status');
-    const btn = document.getElementById('pay');
-
-    try{
-      if (!document.getElementById('tos').checked) {
-        status.textContent = 'Veuillez accepter les CGV.'; return;
-      }
-      btn.disabled = true; status.textContent = 'Traitement du paiement…';
-      const customer = collectCustomer();
-
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          receipt_email: customer.email,
-          payment_method_data: { billing_details: { email: customer.email, name: customer.firstName + ' ' + customer.lastName, phone: customer.phone } },
-          return_url: window.location.origin + '/merci.html'
-        }
+    async function apiPost(path, body){
+      logDebug('POST ' + path, body);
+      const res = await fetch(apiUrl(path), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
       });
-
-      if (error){ status.textContent = error.message || 'Paiement refusé'; btn.disabled = false; return; }
-      if (paymentIntent && paymentIntent.status === 'succeeded'){
-        status.textContent = 'Merci ! Paiement réussi.';
-        localStorage.setItem(cartKey, '[]');
-        // location.href = '/merci.html?pi=' + paymentIntent.id;
-      } else {
-        status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu');
-      }
-    } catch(err){
-      status.textContent = err.message;
-    } finally {
-      btn.disabled = false;
+      const text = await res.text();
+      let json; try { json = JSON.parse(text); } catch { json = { raw:text }; }
+      logDebug('Response ' + res.status + ' ' + path, json);
+      if (!res.ok) throw new Error(json?.error || ('HTTP ' + res.status));
+      return json;
     }
-  });
 
-  // --- Boutons de test ---
-  document.getElementById('addTestItem').onclick = async () => {
-    try {
-      // Panier factice minimal (évite de dépendre d'un catalogue externe)
-      const line = { id: 'sku_TEST', qty: 1 };
-      localStorage.setItem('cart', JSON.stringify([line]));
+    const formatEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v / 100);
+    const cartKey = 'cart';
+    function loadCart(){ try { return JSON.parse(localStorage.getItem(cartKey) || '[]'); } catch { return []; } }
+
+    async function renderCart(){
+      const cartEl = document.getElementById('cart');
+      const subtotalEl = document.getElementById('subtotal');
+      const totalEl = document.getElementById('total');
+
+      const cart = loadCart();
+      cartEl.innerHTML = '';
+      if (!cart.length){
+        cartEl.innerHTML = '<div class="muted">Votre panier est vide.</div>';
+      } else {
+        for (const line of cart){
+          const item = document.createElement('div');
+          item.className = 'line';
+          item.innerHTML = `<div>${line.id}${line.variantId ? ` — <span class="muted">${line.variantId}</span>` : ''} × ${line.qty||1}</div><div></div>`;
+          cartEl.appendChild(item);
+        }
+      }
+      subtotalEl.textContent = '—';
+      totalEl.textContent = '—';
+    }
+
+    function collectCustomer(){
+      return {
+        email: document.getElementById('email').value.trim(),
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        address: {
+          line1: document.getElementById('line1').value.trim(),
+          line2: document.getElementById('line2').value.trim(),
+          city: document.getElementById('city').value.trim(),
+          postal_code: document.getElementById('postal_code').value.trim(),
+          country: document.getElementById('country').value
+        },
+        shipping_method: document.getElementById('shipping_method').value
+      };
+    }
+
+    // Crée le PI côté serveur et renvoie le client_secret
+    async function createIntentWithCustomer(){
+      const cart = loadCart();
+      const customer = collectCustomer();
+      const saveCard = document.getElementById('saveCard').checked;
+
+      if (!cart.length) logDebug('Attention: panier vide — le backend peut refuser la création du PI.');
+      const data = await apiPost('/api/create-payment-intent', { cart, email: customer.email, customer, saveCard });
+      return data.clientSecret;
+    }
+
+    async function mountPaymentElement(){
+      clientSecret = await createIntentWithCustomer();
+      if (!clientSecret) throw new Error('clientSecret manquant');
+      elements = stripe.elements({ clientSecret });
+      paymentElement = elements.create('payment', { /* appearance: { theme:'flat' } */ });
+      paymentElement.mount('#payment-element');
+      logDebug('✅ Payment Element monté');
+    }
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      const btn = document.getElementById('pay');
+
+      try{
+        if (!document.getElementById('tos').checked) { status.textContent = 'Veuillez accepter les CGV.'; return; }
+        btn.disabled = true; status.textContent = 'Traitement du paiement…';
+
+        const customer = collectCustomer();
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            receipt_email: customer.email,
+            payment_method_data: {
+              billing_details: {
+                email: customer.email,
+                name: customer.firstName + ' ' + customer.lastName,
+                phone: customer.phone
+              }
+            },
+            return_url: window.location.origin + '/merci.html'
+          }
+        });
+
+        if (error){
+          status.textContent = error.message || 'Paiement refusé';
+          btn.disabled = false;
+          return;
+        }
+        if (paymentIntent && paymentIntent.status === 'succeeded'){
+          status.textContent = 'Merci ! Paiement réussi.';
+          localStorage.setItem(cartKey, '[]');
+          // location.href = '/merci.html?pi=' + paymentIntent.id;
+        } else {
+          status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu');
+        }
+      } catch(err){
+        status.textContent = err.message || String(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // --- Boutons de test ---
+    document.getElementById('addTestItem').onclick = () => {
+      const line = { id: 'affiche-soleil', qty: 1 }; // id existant dans ton products.json backend
+      localStorage.setItem(cartKey, JSON.stringify([line]));
       alert('Panier ajouté: ' + JSON.stringify([line]));
       location.reload();
-    } catch (e) {
-      alert('Erreur ajout panier: ' + e.message);
-    }
-  };
+    };
+    document.getElementById('forcePI').onclick = async () => {
+      try { await createIntentWithCustomer(); alert('Requête envoyée — vérifie l’onglet Réseau (Network).'); }
+      catch(e){ alert('Erreur: ' + e.message); }
+    };
 
-  document.getElementById('forcePI').onclick = async () => {
-    try { await createIntentWithCustomer(); alert('Requête POST envoyée — regarde Network > Fetch/XHR'); }
-    catch(e){ alert('Erreur: ' + e.message); }
-  };
-
-  // Init
-  (async function init(){
-    try{
-      await renderCart();
-      await mountPaymentElement();
+    // Init
+    (async function init(){
+      try{
+        await renderCart();
+        // (optionnel) test backend rapide
+        try {
+          await fetch(apiUrl('/api/ping'), { method:'GET' });
+          logDebug('Ping backend OK');
+        } catch (e) {
+          logDebug('Ping backend KO', { message: e?.message });
+        }
+        await mountPaymentElement();
+      } catch (err){
+        document.getElementById('status').textContent = (err?.message || String(err)) + ' — Vérifie /api/create-payment-intent, la clé Stripe et les logs.';
+        logDebug('Init erreur', { message: err?.message });
+      }
+    })();
+  </script>
+</body>
+</html>
+  await mountPaymentElement();
     } catch (err){
       document.getElementById('status').textContent = (err && err.message ? err.message : String(err)) + ' — Vérifie /api/create-payment-intent, la clé Stripe et les logs.';
       logDebug('Init erreur', { message: err?.message });
