@@ -95,10 +95,10 @@
   </section>
 
   <!-- Debug helper -->
-  <div class="debug" id="dbg">
+  <div class="debug" id="dbg" aria-live="polite">
     <div class="row">
-      <button id="refresh">↻ Voir localStorage.cart</button>
-      <button id="wipe">🗑️ Supprimer la clé</button>
+      <button id="refresh" type="button">↻ Voir localStorage.cart</button>
+      <button id="wipe" type="button">🗑️ Supprimer la clé</button>
     </div>
     <h4>localStorage.cart</h4>
     <pre id="dump"></pre>
@@ -109,27 +109,43 @@
     const €  = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((Number(v)||0)/100);
     const el = id => document.getElementById(id);
 
-    // ------- Cart I/O (très tolérant)
+    // ------- Cart I/O (plus tolérant)
     const KEY = 'cart';
 
     function readRaw(){
       try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
       catch { return []; }
     }
-    function writeRaw(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); }
+    function writeRaw(arr){
+      try { localStorage.setItem(KEY, JSON.stringify(arr)); }
+      catch { /* localStorage indisponible/quota plein */ }
+    }
 
     // Normalise n'importe quelle forme {id, name, price, qty, image, option}
     function normalizeLine(l){
       if (!l) return null;
-      const id   = l.id ?? l.productId ?? l.slug ?? l.sku;
+
+      // Accepte plus d'alias d'identifiants
+      let id = l.id ?? l.productId ?? l.product_id ?? l.slug ?? l.sku ?? l.uid ?? l.ref ?? l.reference ?? null;
+      const name = l.name ?? l.title ?? (id ? String(id) : null);
+
+      // Fallback si pas d'ID : construit un ID stable depuis le nom + option
+      if (!id && name) id = `${name}-${l.option ?? l.variant ?? ''}`.trim();
       if (!id) return null;
-      const qty  = Math.max(1, parseInt(l.qty ?? 1, 10) || 1);
-      // accepte price en euros (ex: 19.9) ou en cents (ex: 1990)
-      let price = l.price ?? 0;
-      price = (price < 10 && String(price).includes('.')) ? Math.round(Number(price) * 100) : Math.round(Number(price));
+
+      // Quantité
+      const qty = Math.max(1, parseInt(l.qty ?? 1, 10) || 1);
+
+      // Prix: "19,90", 19.9 (euros) ou 1990 (cents)
+      let price = l.price ?? l.unit_price ?? l.amount ?? 0;
+      if (typeof price === 'string') price = price.replace(',', '.');
+      price = Number(price);
+      if (price < 10 && String(price).includes('.')) price = Math.round(price * 100); // euros → cents
+      else price = Math.round(price); // déjà en cents (ou entier)
+
       return {
         id,
-        name: l.name ?? id,
+        name: name ?? id,
         price: Number.isFinite(price) ? price : 0,
         currency: (l.currency || 'EUR').toUpperCase(),
         image: l.image || 'https://picsum.photos/seed/placeholder/600/600',
@@ -140,11 +156,18 @@
 
     function load(){
       const raw = readRaw();
-      const norm = Array.isArray(raw) ? raw.map(normalizeLine).filter(Boolean) : [];
-      // fusionne doublons (même id + option)
+
+      // Accepte tableau OU objet { id: item, ... }
+      let arr = [];
+      if (Array.isArray(raw)) arr = raw;
+      else if (raw && typeof raw === 'object') arr = Object.values(raw);
+
+      const norm = arr.map(normalizeLine).filter(Boolean);
+
+      // Fusionne doublons (même id + option)
       const map = new Map();
       for (const x of norm){
-        const k = x.id + '|' + (x.option||'');
+        const k = `${x.id}|${x.option||''}`;
         if (map.has(k)) map.get(k).qty += x.qty;
         else map.set(k, {...x});
       }
@@ -174,16 +197,16 @@
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
-          <div class="thumb"><img src="${l.image}" alt=""></div>
+          <div class="thumb"><img src="${l.image}" alt="${l.name}"></div>
           <div class="meta">
             <div class="name">${l.name}</div>
             ${l.option ? `<div class="opt">Variante : ${l.option}</div>` : ''}
-            <button class="rm" data-i="${i}" aria-label="Retirer">Retirer</button>
+            <button class="rm" data-i="${i}" aria-label="Retirer ${l.name}">Retirer</button>
           </div>
           <div class="act">
-            <div class="qty">
+            <div class="qty" role="group" aria-label="Quantité ${l.name}">
               <button class="dec" data-i="${i}" aria-label="Diminuer">−</button>
-              <span>${l.qty}</span>
+              <span aria-live="polite">${l.qty}</span>
               <button class="inc" data-i="${i}" aria-label="Augmenter">+</button>
             </div>
             <div class="price">${€(l.price * l.qty)}</div>
