@@ -10,8 +10,18 @@
   <style>
     :root{ --bg:#fff; --text:#111; --muted:#2d2d2d; --accent:#1E155C; }
     *{box-sizing:border-box}
-    html,body{height:100%; overflow-x:hidden}
-    body{margin:0; font-family:"Playfair Display", serif; color:var(--text); background:var(--bg); line-height:1.55;}
+    html,body{height:100%}
+    /* ✅ Pleine hauteur sans footer */
+    body{
+      margin:0;
+      font-family:"Playfair Display", serif;
+      color:var(--text);
+      background:var(--bg);
+      line-height:1.55;
+      min-height:100dvh;        /* plein écran */
+      display:flex;
+      flex-direction:column;    /* header + section (flex:1) */
+    }
     a{color:inherit; text-decoration:none}
     .container{width:min(1200px, 92%); margin-inline:auto}
 
@@ -23,7 +33,11 @@
     .title{position:absolute; left:50%; transform:translateX(-50%); margin:0; font-weight:700; font-size:22px}
 
     /* Layout */
-    section{padding:32px 0}
+    section{
+      flex:1;                   /* ✅ occupe toute la hauteur restante */
+      padding:32px 0;
+      display:block;
+    }
     .grid{ display:grid; grid-template-columns: 1fr minmax(260px, 360px); gap: clamp(16px, 3.5vw, 28px); align-items:start; }
     @media (max-width: 880px){ .grid{ grid-template-columns:1fr; } }
     .h2{font-weight:700}
@@ -52,19 +66,6 @@
     .buttons{display:grid; gap:10px; margin-top:6px}
     .button{display:inline-block; background:var(--accent); color:#fff; border:1px solid #000; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
     .ghost{display:inline-block; background:#fff; color:#111; border:1px solid rgba(0,0,0,.12); padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; cursor:pointer}
-
-    /* Footer */
-    footer.footer{ background:#fafafa; border-top:1px solid rgba(0,0,0,.08); margin-top:28px; }
-    .footer .top{ padding:28px 0; display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: clamp(16px, 3vw, 28px); align-items:start; }
-    @media (max-width: 880px){ .footer .top{ grid-template-columns:1fr; } }
-    .footer h4{ margin:0 0 10px; font-weight:700; font-size:16px }
-    .footer .logo{ font-weight:900; font-size:20px }
-    .footer ul{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
-    .footer a:hover{ text-decoration:underline; }
-    .footbar{ border-top:1px solid rgba(0,0,0,.06); padding:12px 0 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .social{ display:flex; gap:10px; margin-top:10px }
-    .social a{ display:inline-flex; width:32px; height:32px; border:1px solid rgba(0,0,0,.12); border-radius:8px; align-items:center; justify-content:center; background:#fff }
-    .social svg{ width:16px; height:16px }
   </style>
 </head>
 <body>
@@ -105,52 +106,6 @@
     </div>
   </section>
 
-  <!-- Footer (reprend la charte de l'index) -->
-  <footer class="footer">
-    <div class="container top">
-      <div>
-        <a class="logo" href="index.html">Boutique</a>
-        <p class="muted">Objets soignés, service rapide, retours faciles.</p>
-        <div class="social" aria-label="Réseaux sociaux">
-          <a href="#" aria-label="Instagram" title="Instagram">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>
-          </a>
-          <a href="#" aria-label="X" title="X">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4l16 16M20 4L4 20"/></svg>
-          </a>
-          <a href="#" aria-label="Facebook" title="Facebook">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v9h4v-9h3l1-4h-4V6a1 1 0 0 1 1-1h3z"/></svg>
-          </a>
-        </div>
-      </div>
-
-      <nav aria-label="Navigation boutique">
-        <h4>Boutique</h4>
-        <ul>
-          <li><a href="produits.html">Produits</a></li>
-          <li><a href="panier.html" aria-current="page">Panier</a></li>
-          <li><a href="checkout.html">Paiement</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav>
-
-      <nav aria-label="Informations légales">
-        <h4>Infos</h4>
-        <ul>
-          <li><a href="#">Mentions légales</a></li>
-          <li><a href="#">CGV</a></li>
-          <li><a href="#">Confidentialité</a></li>
-          <li><a href="#">Retours & remboursements</a></li>
-        </ul>
-      </nav>
-    </div>
-
-    <div class="container footbar">
-      <div class="muted">© 2025 — Boutique</div>
-      <div class="muted">Fait avec ♥</div>
-    </div>
-  </footer>
-
   <script>
     // ------- Utils monnaie / DOM
     const formatEUR = v =>
@@ -170,28 +125,17 @@
       catch { /* localStorage indisponible/quota plein */ }
     }
 
-    // Normalise n'importe quelle forme {id, name, price, qty, image, option}
     function normalizeLine(l){
       if (!l) return null;
-
-      // Alias d'identifiants
       let id = l.id || l.productId || l.product_id || l.slug || l.sku || l.uid || l.ref || l.reference || null;
       const name = l.name || l.title || (id ? String(id) : null);
-
-      // Fallback si pas d'ID : construit un ID stable
       if (!id && name) id = `${name}-${(l.option || l.variant || '')}`.trim();
       if (!id) return null;
-
-      // Quantité
       const qty = Math.max(1, parseInt(l.qty || 1, 10) || 1);
-
-      // Prix: "19,90", 19.9 (euros) ou 1990 (cents)
       let price = (l.price != null ? l.price : (l.unit_price != null ? l.unit_price : (l.amount != null ? l.amount : 0)));
       if (typeof price === 'string') price = price.replace(',', '.');
       price = Number(price);
-      if (price < 10 && String(price).includes('.')) price = Math.round(price * 100); // euros → cents
-      else price = Math.round(price); // déjà en cents (ou entier)
-
+      if (price < 10 && String(price).includes('.')) price = Math.round(price * 100); else price = Math.round(price);
       return {
         id,
         name: name || id,
@@ -205,15 +149,10 @@
 
     function load(){
       const raw = readRaw();
-
-      // Accepte tableau OU objet { id: item, ... }
       let arr = [];
       if (Array.isArray(raw)) arr = raw;
       else if (raw && typeof raw === 'object') arr = Object.values(raw);
-
       const norm = arr.map(normalizeLine).filter(Boolean);
-
-      // Fusionne doublons (même id + option)
       const map = new Map();
       for (const x of norm){
         const k = `${x.id}|${x.option||''}`;
@@ -224,7 +163,6 @@
     }
     function save(lines){ writeRaw(lines); }
 
-    // ------- Rendu
     function subtotal(lines){ return lines.reduce((s,l)=> s + l.price*l.qty, 0); }
 
     function render(){
@@ -281,10 +219,7 @@
       };
     }
 
-    // ------- Actions globales
     el('clear').onclick = () => { writeRaw([]); render(); };
-
-    // ------- Init
     render();
   </script>
 </body>
