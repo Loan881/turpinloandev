@@ -1,1 +1,305 @@
-<!doctype html> <html lang="fr"> <head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> <title>Checkout</title> <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet"> <script src="https://js.stripe.com/v3/"></script> <style> :root{ --ink:#0b0c10; --paper:#ffffff; --muted:#636570; --line:#d7d9e0; --radius:16px; --container:1100px; --pad:20px; } *{ box-sizing:border-box } body{ margin:0; font-family:"Playfair Display",serif; color:var(--ink); background:var(--paper); } .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px var(--pad) 60px } h1{ font-size:28px; margin:16px 0 6px; } p.muted{ color:var(--muted); margin-top:0 } .grid{ display:grid; gap:24px; grid-template-columns:1fr; } @media(min-width:980px){ .grid{ grid-template-columns:1.2fr .8fr } } .card{ border:1px solid var(--line); border-radius:12px; padding:16px; } .section-title{ font-weight:700; font-size:18px; margin:6px 0 12px } .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px } .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px } .field{ display:grid; gap:6px; margin-bottom:12px } label{ font-size:14px; font-weight:700 } input, select, textarea{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-family:inherit; font-size:16px } textarea{ min-height:80px } .summary-line{ display:flex; justify-content:space-between; margin:8px 0 } .total{ font-weight:900; font-size:20px } #payment-element{ padding:12px; border:1px solid var(--line); border-radius:10px } .btn{ width:100%; border:1px solid var(--line); background:#111; color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:700 } .btn:disabled{ opacity:.6; cursor:not-allowed } .muted-small{ color:var(--muted); font-size:12px } .cart-lines{ display:grid; gap:12px } .line{ display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center } .debug{ font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; background:#f7f7f8; border:1px dashed #d0d0d5; padding:8px; border-radius:8px; } </style> </head> <body> <!-- Boutons debug / test --> <div style="position:fixed;bottom:12px;right:12px;z-index:9999;display:grid;gap:6px;"> <button id="addTestItem">+ Panier de test</button> <button id="forcePI">Créer PaymentIntent (test)</button> </div> <div class="container"> <h1>Finaliser la commande</h1> <p class="muted">Renseigne tes informations, choisis la livraison et paie en toute sécurité.</p> <div class="grid"> <!-- Colonne gauche: informations client & paiement --> <section class="card"> <h2 class="section-title">Informations client</h2> <form id="checkout-form"> <div class="field"> <label for="email">Email</label> <input id="email" type="email" required placeholder="ton.email@exemple.com" /> </div> <div class="row"> <div class="field"> <label for="firstName">Prénom</label> <input id="firstName" required /> </div> <div class="field"> <label for="lastName">Nom</label> <input id="lastName" required /> </div> </div> <div class="field"> <label for="phone">Téléphone</label> <input id="phone" type="tel" placeholder="Optionnel" /> </div> <h3 class="section-title">Adresse de livraison</h3> <div class="field"> <label for="line1">Adresse</label> <input id="line1" autocomplete="address-line1" required /> </div> <div class="field"> <label for="line2">Complément</label> <input id="line2" autocomplete="address-line2" /> </div> <div class="row3"> <div class="field"> <label for="postal_code">Code postal</label> <input id="postal_code" autocomplete="postal-code" required /> </div> <div class="field"> <label for="city">Ville</label> <input id="city" autocomplete="address-level2" required /> </div> <div class="field"> <label for="country">Pays</label> <select id="country" required> <option value="FR" selected>France</option> <option value="BE">Belgique</option> <option value="CH">Suisse</option> <option value="DE">Allemagne</option> <option value="ES">Espagne</option> <option value="IT">Italie</option> </select> </div> </div> <h3 class="section-title">Livraison</h3> <div class="field"> <select id="shipping_method" required> <option value="standard" selected>Standard (3–5 j) — calculé après</option> <option value="express">Express (1–2 j) — calculé après</option> </select> </div> <h3 class="section-title">Paiement</h3> <div id="payment-element"></div> <!-- ✅ Nouveau : enregistrer la carte --> <div class="field"> <label style="display:flex; gap:8px; align-items:center"> <input id="saveCard" type="checkbox"> <span class="muted-small">Enregistrer cette carte pour mes prochains achats</span> </label> </div> <div class="field"> <label style="display:flex; gap:8px; align-items:center"> <input id="tos" type="checkbox" required> <span class="muted-small">J’accepte les CGV et la politique de confidentialité.</span> </label> </div> <button id="pay" class="btn" type="submit">Payer maintenant</button> <p id="status" class="muted" role="status" aria-live="polite" style="min-height:1.4em"></p> <div id="debug" class="debug" hidden></div> </form> </section> <!-- Colonne droite: résumé --> <aside class="card"> <h2 class="section-title">Résumé</h2> <div id="cart" class="cart-lines"></div> <hr> <div class="summary-line"><span>Sous-total</span><strong id="subtotal">0 €</strong></div> <div class="summary-line"><span>Livraison</span><span id="ship">Calculée après</span></div> <div class="summary-line total"><span>Total</span><span id="total">0 €</span></div> <p class="muted-small">Le total final peut inclure les frais de port selon l’adresse et la méthode de livraison.</p> </aside> </div> </div> <script> // === CONFIG === // ➜ Laisse API_BASE vide pour cibler ton propre domaine (ex: ton-site.vercel.app) // Si tu veux cibler un backend externe, mets l'URL complète (https://...) <script> // === CONFIG === const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ton backend const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ utilise une clé TEST en dev const stripe = Stripe(STRIPE_PK); let elements, paymentElement, clientSecret; // --- Helpers --- const debugEl = () => document.getElementById('debug'); function logDebug(msg, data){ const el = debugEl(); el.hidden = false; const line = document.createElement('div'); line.textContent = [${new Date().toLocaleTimeString()}] ${msg} ${data ? JSON.stringify(data) : ''}; el.appendChild(line); console.log('[checkout]', msg, data || ''); } function apiUrl(path){ if (!API_BASE) return path; // même origine return API_BASE.replace(/\/$/, '') + path; // concat propre } async function apiPost(path, body){ logDebug('POST ' + path, body); const res = await fetch(apiUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); const text = await res.text(); let json; try { json = JSON.parse(text); } catch { json = { raw:text }; } logDebug('Response ' + res.status + ' ' + path, json); if (!res.ok) throw new Error(json?.error || HTTP ${res.status}); return json; } const formatEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v / 100); const cartKey = 'cart'; function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); } async function renderCart(){ const cartEl = document.getElementById('cart'); const subtotalEl = document.getElementById('subtotal'); const totalEl = document.getElementById('total'); const cart = loadCart(); cartEl.innerHTML = ''; if (!cart.length){ cartEl.innerHTML = '<div class="muted">Votre panier est vide.</div>'; } else { for (const line of cart){ const item = document.createElement('div'); item.className = 'line'; item.innerHTML = <div>${line.id} ${line.variantId ? — <span class="muted">${line.variantId}</span> : ''} × ${line.qty}</div><div></div>; cartEl.appendChild(item); } } subtotalEl.textContent = '—'; totalEl.textContent = '—'; } function collectCustomer(){ return { email: document.getElementById('email').value.trim(), firstName: document.getElementById('firstName').value.trim(), lastName: document.getElementById('lastName').value.trim(), phone: document.getElementById('phone').value.trim(), address: { line1: document.getElementById('line1').value.trim(), line2: document.getElementById('line2').value.trim(), city: document.getElementById('city').value.trim(), postal_code: document.getElementById('postal_code').value.trim(), country: document.getElementById('country').value }, shipping_method: document.getElementById('shipping_method').value }; } // ✅ Crée un PaymentIntent via /api/create-payment-intent (même domaine par défaut) async function createIntentWithCustomer(){ const cart = loadCart(); const customer = collectCustomer(); const saveCard = document.getElementById('saveCard').checked; // Permettre la création même si panier vide en mode debug bouton "Créer PI" if (!cart.length) logDebug('Attention: panier vide — la création PI peut échouer côté backend.'); const data = await apiPost('/api/create-payment-intent', { cart, email: customer.email, customer, saveCard }); return data.clientSecret; } async function mountPaymentElement(){ clientSecret = await createIntentWithCustomer(); if (!clientSecret) throw new Error('clientSecret manquant'); elements = stripe.elements({ clientSecret }); const options = {}; // add appearance si besoin paymentElement = elements.create('payment', options); paymentElement.mount('#payment-element'); logDebug('Payment Element monté'); } document.getElementById('checkout-form').addEventListener('submit', async (e) => { e.preventDefault(); const status = document.getElementById('status'); const btn = document.getElementById('pay'); try{ if (!document.getElementById('tos').checked) { status.textContent = 'Veuillez accepter les CGV.'; return; } btn.disabled = true; status.textContent = 'Traitement du paiement…'; const customer = collectCustomer(); const { error, paymentIntent } = await stripe.confirmPayment({ elements, confirmParams: { receipt_email: customer.email, payment_method_data: { billing_details: { email: customer.email, name: customer.firstName + ' ' + customer.lastName, phone: customer.phone } }, return_url: window.location.origin + '/merci.html' } }); if (error){ status.textContent = error.message || 'Paiement refusé'; btn.disabled = false; return; } if (paymentIntent && paymentIntent.status === 'succeeded'){ status.textContent = 'Merci ! Paiement réussi.'; localStorage.setItem(cartKey, '[]'); // location.href = '/merci.html?pi=' + paymentIntent.id; } else { status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu'); } } catch(err){ status.textContent = err.message; } finally { btn.disabled = false; } }); // --- Boutons de test --- document.getElementById('addTestItem').onclick = async () => { try { // Panier factice minimal (évite de dépendre d'un catalogue externe) const line = { id: 'sku_TEST', qty: 1 }; localStorage.setItem('cart', JSON.stringify([line])); alert('Panier ajouté: ' + JSON.stringify([line])); location.reload(); } catch (e) { alert('Erreur ajout panier: ' + e.message); } }; document.getElementById('forcePI').onclick = async () => { try { await createIntentWithCustomer(); alert('Requête POST envoyée — regarde Network > Fetch/XHR'); } catch(e){ alert('Erreur: ' + e.message); } }; // Init (async function init(){ try{ await renderCart(); await mountPaymentElement(); } catch (err){ document.getElementById('status').textContent = (err && err.message ? err.message : String(err)) + ' — Vérifie /api/create-payment-intent, la clé Stripe et les logs.'; logDebug('Init erreur', { message: err?.message }); } })(); </script> </body> </html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    :root{
+      --ink:#0b0c10;
+      --paper:#ffffff;
+      --muted:#636570;
+      --line:#d7d9e0;
+      --radius:16px;
+      --container:1100px;
+      --pad:20px;
+    }
+    *{ box-sizing:border-box }
+    body{
+      margin:0;
+      font-family:"Playfair Display",serif;
+      color:var(--ink);
+      background:var(--paper);
+    }
+    .container{ width:100%; max-width:var(--container); margin:0 auto; padding:24px var(--pad) 60px }
+    h1{ font-size:28px; margin:16px 0 6px; }
+    p.muted{ color:var(--muted); margin-top:0 }
+    .grid{ display:grid; gap:24px; grid-template-columns:1fr; }
+    @media(min-width:980px){ .grid{ grid-template-columns:1.2fr .8fr } }
+    .card{ border:1px solid var(--line); border-radius:12px; padding:16px; }
+    .section-title{ font-weight:700; font-size:18px; margin:6px 0 12px }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px }
+    .field{ display:grid; gap:6px; margin-bottom:12px }
+    label{ font-size:14px; font-weight:700 }
+    input, select, textarea{
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:10px 12px;
+      font-family:inherit;
+      font-size:16px
+    }
+    textarea{ min-height:80px }
+    .summary-line{ display:flex; justify-content:space-between; margin:8px 0 }
+    .total{ font-weight:900; font-size:20px }
+    #payment-element{ padding:12px; border:1px solid var(--line); border-radius:10px }
+    .btn{
+      width:100%;
+      border:1px solid var(--line);
+      background:#111;
+      color:#fff;
+      padding:12px 16px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700
+    }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
+    .muted-small{ color:var(--muted); font-size:12px }
+    .cart-lines{ display:grid; gap:12px }
+    .line{ display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Finaliser la commande</h1>
+    <p class="muted">Renseigne tes informations, choisis la livraison et paie en toute sécurité.</p>
+
+    <div class="grid">
+      <!-- Colonne gauche -->
+      <section class="card">
+        <h2 class="section-title">Informations client</h2>
+        <form id="checkout-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" required placeholder="ton.email@exemple.com" />
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="firstName">Prénom</label>
+              <input id="firstName" required />
+            </div>
+            <div class="field">
+              <label for="lastName">Nom</label>
+              <input id="lastName" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="phone">Téléphone</label>
+            <input id="phone" type="tel" placeholder="Optionnel" />
+          </div>
+
+          <h3 class="section-title">Adresse de livraison</h3>
+          <div class="field">
+            <label for="line1">Adresse</label>
+            <input id="line1" autocomplete="address-line1" required />
+          </div>
+          <div class="field">
+            <label for="line2">Complément</label>
+            <input id="line2" autocomplete="address-line2" />
+          </div>
+          <div class="row3">
+            <div class="field">
+              <label for="postal_code">Code postal</label>
+              <input id="postal_code" autocomplete="postal-code" required />
+            </div>
+            <div class="field">
+              <label for="city">Ville</label>
+              <input id="city" autocomplete="address-level2" required />
+            </div>
+            <div class="field">
+              <label for="country">Pays</label>
+              <select id="country" required>
+                <option value="FR" selected>France</option>
+                <option value="BE">Belgique</option>
+                <option value="CH">Suisse</option>
+                <option value="DE">Allemagne</option>
+                <option value="ES">Espagne</option>
+                <option value="IT">Italie</option>
+              </select>
+            </div>
+          </div>
+
+          <h3 class="section-title">Livraison</h3>
+          <div class="field">
+            <select id="shipping_method" required>
+              <option value="standard" selected>Standard (10 j) — calculé après</option>
+            </select>
+          </div>
+
+          <h3 class="section-title">Paiement</h3>
+          <div id="payment-element"></div>
+
+          <!-- ✅ Enregistrer la carte -->
+          <div class="field">
+            <label style="display:flex; gap:8px; align-items:center">
+              <input id="saveCard" type="checkbox">
+              <span class="muted-small">Enregistrer cette carte pour mes prochains achats</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label style="display:flex; gap:8px; align-items:center">
+              <input id="tos" type="checkbox" required>
+              <span class="muted-small">J’accepte les CGV et la politique de confidentialité.</span>
+            </label>
+          </div>
+
+          <button id="pay" class="btn" type="submit">Payer maintenant</button>
+          <p id="status" class="muted" role="status" aria-live="polite" style="min-height:1.4em"></p>
+        </form>
+      </section>
+
+      <!-- Colonne droite -->
+      <aside class="card">
+        <h2 class="section-title">Résumé</h2>
+        <div id="cart" class="cart-lines"></div>
+        <hr>
+        <div class="summary-line"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
+        <div class="summary-line"><span>Livraison</span><span id="ship">Standard (10 j)</span></div>
+        <div class="summary-line total"><span>Total</span><span id="total">0 €</span></div>
+        <p class="muted-small">Le total final peut inclure les frais de port selon l’adresse et la méthode de livraison.</p>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // === CONFIG ===
+    const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ton backend
+    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ clé TEST en dev
+    const stripe = Stripe(STRIPE_PK);
+
+    let elements, paymentElement, clientSecret;
+
+    // --- Helpers ---
+    function apiUrl(path){
+      if (!API_BASE) return path;
+      return API_BASE.replace(/\/$/, '') + path;
+    }
+    async function apiPost(path, body){
+      const res = await fetch(apiUrl(path), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch { json = { raw:text }; }
+      if (!res.ok) throw new Error(json?.error || 'HTTP ' + res.status);
+      return json;
+    }
+    const formatEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v / 100);
+    const cartKey = 'cart';
+    function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
+
+    async function renderCart(){
+      const cartEl = document.getElementById('cart');
+      const subtotalEl = document.getElementById('subtotal');
+      const totalEl = document.getElementById('total');
+      const cart = loadCart();
+      cartEl.innerHTML = '';
+      if (!cart.length){
+        cartEl.innerHTML = '<div class="muted">Votre panier est vide.</div>';
+      } else {
+        for (const line of cart){
+          const item = document.createElement('div');
+          item.className = 'line';
+          item.innerHTML = `<div>${line.id} × ${line.qty}</div><div></div>`;
+          cartEl.appendChild(item);
+        }
+      }
+      subtotalEl.textContent = '—';
+      totalEl.textContent = '—';
+    }
+
+    function collectCustomer(){
+      return {
+        email: document.getElementById('email').value.trim(),
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        address: {
+          line1: document.getElementById('line1').value.trim(),
+          line2: document.getElementById('line2').value.trim(),
+          city: document.getElementById('city').value.trim(),
+          postal_code: document.getElementById('postal_code').value.trim(),
+          country: document.getElementById('country').value
+        },
+        shipping_method: document.getElementById('shipping_method').value
+      };
+    }
+
+    async function createIntentWithCustomer(){
+      const cart = loadCart();
+      const customer = collectCustomer();
+      const saveCard = document.getElementById('saveCard').checked;
+      const data = await apiPost('/api/create-payment-intent', { cart, email: customer.email, customer, saveCard });
+      return data.clientSecret;
+    }
+
+    async function mountPaymentElement(){
+      clientSecret = await createIntentWithCustomer();
+      if (!clientSecret) throw new Error('clientSecret manquant');
+      elements = stripe.elements({ clientSecret });
+      paymentElement = elements.create('payment', {});
+      paymentElement.mount('#payment-element');
+    }
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      const btn = document.getElementById('pay');
+      try{
+        if (!document.getElementById('tos').checked) {
+          status.textContent = 'Veuillez accepter les CGV.';
+          return;
+        }
+        btn.disabled = true;
+        status.textContent = 'Traitement du paiement…';
+        const customer = collectCustomer();
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            receipt_email: customer.email,
+            payment_method_data: {
+              billing_details: {
+                email: customer.email,
+                name: customer.firstName + ' ' + customer.lastName,
+                phone: customer.phone
+              }
+            },
+            return_url: window.location.origin + '/merci.html'
+          }
+        });
+        if (error){
+          status.textContent = error.message || 'Paiement refusé';
+          btn.disabled = false;
+          return;
+        }
+        if (paymentIntent && paymentIntent.status === 'succeeded'){
+          status.textContent = 'Merci ! Paiement réussi.';
+          localStorage.setItem(cartKey, '[]');
+        } else {
+          status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu');
+        }
+      } catch(err){
+        status.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    (async function init(){
+      try{
+        await renderCart();
+        await mountPaymentElement();
+      } catch (err){
+        document.getElementById('status').textContent = (err && err.message ? err.message : String(err)) + ' — Vérifie /api/create-payment-intent, la clé Stripe et les logs.';
+      }
+    })();
+  </script>
+</body>
+</html>
