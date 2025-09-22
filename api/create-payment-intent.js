@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   try {
     const { cart, customer } = req.body;
 
-    // Exemple de calcul simple du montant
+    // Calcul montant (exemple : 20€ par article)
     const amount = cart.reduce((sum, item) => sum + item.qty * 2000, 0);
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -27,11 +27,20 @@ export default async function handler(req, res) {
       metadata: {
         cart: JSON.stringify(cart),
         name: customer.firstName + " " + customer.lastName,
-        email: customer.email,
+        email: customer.email
       },
     });
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    // 🔎 Réponse debug + Stripe
+    res.json({
+      debug: {
+        cors: true,
+        method: req.method,
+        receivedCart: cart,
+        receivedCustomer: customer,
+      },
+      clientSecret: paymentIntent.client_secret,
+    });
   } catch (err) {
     console.error("Erreur Stripe:", err);
     res.status(500).json({ error: err.message });
