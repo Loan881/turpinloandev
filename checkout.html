@@ -160,11 +160,11 @@
 
   <script>
     // === CONFIG ===
-    const STRIPE_PK = "pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL"; // ⚠️ ta clé publique test Stripe
+    const STRIPE_PK = "pk_test_xxxxxxxxxxxxxxxxxxxxx"; // ⚠️ mets ta clé publique Stripe (pk_test ou pk_live)
     const stripe = Stripe(STRIPE_PK);
 
-    // 👉 l’URL de ton backend Vercel
-    const API_BASE = "https://mon-backend.vercel.app/api"; 
+    // 👉 l’URL de ton backend Vercel (⚠️ remplace par ton vrai projet)
+    const API_BASE = "https://ton-projet.vercel.app/api"; 
 
     let elements, paymentElement, clientSecret;
 
@@ -222,6 +222,7 @@
       const cart = loadCart();
       const customer = collectCustomer();
       const data = await apiPost(`${API_BASE}/create-payment-intent`, { cart, customer });
+      console.log("Réponse backend:", data); // 🔎 Debug
       return data.clientSecret;
     }
 
@@ -268,9 +269,9 @@
         await mountPaymentElement();
       } catch (err){
         document.getElementById("status").textContent = err.message;
+        console.error("Erreur init:", err);
       }
     })();
   </script>
 </body>
 </html>
-
