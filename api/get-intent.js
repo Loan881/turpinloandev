@@ -19,10 +19,17 @@ export default async function handler(req, res) {
     if (!id) return res.status(400).json({ error: "PaymentIntent ID manquant" });
 
     const paymentIntent = await stripe.paymentIntents.retrieve(id);
-    res.json({ paymentIntent });
+
+    res.json({
+      debug: {
+        cors: true,
+        method: req.method,
+        intentId: id
+      },
+      paymentIntent
+    });
   } catch (err) {
     console.error("Erreur Stripe:", err);
     res.status(500).json({ error: err.message });
   }
 }
-
