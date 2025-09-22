@@ -160,104 +160,99 @@
 
   <script>
     // === CONFIG ===
-    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ ta clé publique test
+    const STRIPE_PK = "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"; // ⚠️ ta clé publique test Stripe
     const stripe = Stripe(STRIPE_PK);
 
-    // 👉 Remplace par ton URL Vercel
-    const API_BASE = "https://ton-projet.vercel.app";
+    // 👉 l’URL de ton backend Vercel
+    const API_BASE = "https://mon-backend.vercel.app/api"; 
 
     let elements, paymentElement, clientSecret;
 
-    // --- Helpers ---
     async function apiPost(path, body){
       const res = await fetch(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body || {})
       });
-      const text = await res.text();
-      let json;
-      try { json = JSON.parse(text); } catch { json = { raw:text }; }
-      if (!res.ok) throw new Error(json?.error || 'HTTP ' + res.status);
-      return json;
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
     }
 
-    const cartKey = 'cart';
-    function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
+    const cartKey = "cart";
+    function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || "[]"); }
 
     async function renderCart(){
-      const cartEl = document.getElementById('cart');
-      const subtotalEl = document.getElementById('subtotal');
-      const totalEl = document.getElementById('total');
+      const cartEl = document.getElementById("cart");
+      const subtotalEl = document.getElementById("subtotal");
+      const totalEl = document.getElementById("total");
       const cart = loadCart();
-      cartEl.innerHTML = '';
+      cartEl.innerHTML = "";
       if (!cart.length){
         cartEl.innerHTML = '<div class="muted">Votre panier est vide.</div>';
       } else {
         for (const line of cart){
-          const item = document.createElement('div');
-          item.className = 'line';
+          const item = document.createElement("div");
+          item.className = "line";
           item.innerHTML = `<div>${line.id} × ${line.qty}</div><div></div>`;
           cartEl.appendChild(item);
         }
       }
-      subtotalEl.textContent = '—';
-      totalEl.textContent = '—';
+      subtotalEl.textContent = "—";
+      totalEl.textContent = "—";
     }
 
     function collectCustomer(){
       return {
-        email: document.getElementById('email').value.trim(),
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById("email").value.trim(),
+        firstName: document.getElementById("firstName").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
         address: {
-          line1: document.getElementById('line1').value.trim(),
-          line2: document.getElementById('line2').value.trim(),
-          city: document.getElementById('city').value.trim(),
-          postal_code: document.getElementById('postal_code').value.trim(),
-          country: document.getElementById('country').value
+          line1: document.getElementById("line1").value.trim(),
+          line2: document.getElementById("line2").value.trim(),
+          city: document.getElementById("city").value.trim(),
+          postal_code: document.getElementById("postal_code").value.trim(),
+          country: document.getElementById("country").value
         },
-        shipping_method: document.getElementById('shipping_method').value
+        shipping_method: document.getElementById("shipping_method").value
       };
     }
 
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      const data = await apiPost(`${API_BASE}/api/create-payment-intent`, { cart, customer });
+      const data = await apiPost(`${API_BASE}/create-payment-intent`, { cart, customer });
       return data.clientSecret;
     }
 
     async function mountPaymentElement(){
       clientSecret = await createIntentWithCustomer();
-      if (!clientSecret) throw new Error('clientSecret manquant');
       elements = stripe.elements({ clientSecret });
-      paymentElement = elements.create('payment');
-      paymentElement.mount('#payment-element');
+      paymentElement = elements.create("payment");
+      paymentElement.mount("#payment-element");
     }
 
-    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+    document.getElementById("checkout-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const status = document.getElementById('status');
-      const btn = document.getElementById('pay');
+      const status = document.getElementById("status");
+      const btn = document.getElementById("pay");
       try{
-        if (!document.getElementById('tos').checked) {
-          status.textContent = 'Veuillez accepter les CGV.';
+        if (!document.getElementById("tos").checked) {
+          status.textContent = "Veuillez accepter les CGV.";
           return;
         }
         btn.disabled = true;
-        status.textContent = 'Traitement du paiement…';
+        status.textContent = "Traitement du paiement…";
 
         const { error } = await stripe.confirmPayment({
           elements,
           confirmParams: {
-            return_url: window.location.origin + '/merci.html'
+            return_url: window.location.origin + "/merci.html"
           }
         });
 
         if (error){
-          status.textContent = error.message || 'Paiement refusé';
+          status.textContent = error.message || "Paiement refusé";
           btn.disabled = false;
         }
       } catch(err){
@@ -272,7 +267,7 @@
         await renderCart();
         await mountPaymentElement();
       } catch (err){
-        document.getElementById('status').textContent = err.message;
+        document.getElementById("status").textContent = err.message;
       }
     })();
   </script>
