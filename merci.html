@@ -107,7 +107,8 @@
       document.getElementById("orderId").textContent =
         "Numéro de commande : " + paymentIntentId;
 
-      const res = await fetch("/api/get-intent?id=" + paymentIntentId);
+      // ✅ On appelle maintenant /backend/get-intent
+      const res = await fetch("/backend/get-intent?id=" + paymentIntentId);
       const data = await res.json();
 
       if (data.customer) {
