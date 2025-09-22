@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { buffer } from "micro";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export const config = {
   api: { bodyParser: false }, // Stripe demande le raw body
 };
@@ -19,17 +20,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
-  const buf = await buffer(req);
-  const sig = req.headers["stripe-signature"];
-
   try {
+    const buf = await buffer(req);
+    const sig = req.headers["stripe-signature"];
+
     const event = stripe.webhooks.constructEvent(
       buf,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    // 🔎 Debug
     console.log("Webhook reçu:", event.type);
 
     if (event.type === "payment_intent.succeeded") {
@@ -38,7 +38,10 @@ export default async function handler(req, res) {
       // 👉 Ici tu pourras appeler Printful
     }
 
-    res.json({ debug: { cors: true, event: event.type }, received: true });
+    res.json({
+      debug: { cors: true, event: event.type },
+      received: true,
+    });
   } catch (err) {
     console.error("⚠️ Webhook error:", err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);
