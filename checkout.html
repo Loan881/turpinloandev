@@ -222,7 +222,8 @@
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      const data = await apiPost('/backend/create-payment-intent', { cart, customer });
+      // 🔥 correction ici : backend → api
+      const data = await apiPost('/api/create-payment-intent', { cart, customer });
       return data.clientSecret;
     }
 
@@ -275,4 +276,3 @@
   </script>
 </body>
 </html>
-
