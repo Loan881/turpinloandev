@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   // --- CORS ---
   res.setHeader("Access-Control-Allow-Origin", "https://loan881.github.io");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Stripe-Signature");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -29,11 +29,10 @@ export default async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    // Gestion des événements
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
       console.log("✅ Paiement réussi:", paymentIntent.id);
-      // 👉 Ici tu peux déclencher Printful ou envoyer un email
+      // 👉 Ici tu pourras appeler Printful ou envoyer un email de confirmation
     }
 
     res.json({ received: true });
