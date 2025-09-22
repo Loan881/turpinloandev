@@ -1,8 +1,10 @@
 {
-  "name": "mon-projet",
+  "name": "stripe-backend",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "stripe": "^14.0.0"
+    "stripe": "^12.0.0",
+    "micro": "^9.4.1"
   }
 }
+
