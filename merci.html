@@ -23,7 +23,8 @@
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-      max-width: 500px;
+      max-width: 600px;
+      width: 100%;
       padding: 40px 30px;
       text-align: center;
     }
@@ -34,7 +35,7 @@
     p {
       font-size: 16px;
       color: #636570;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
     .btn {
       display: inline-block;
@@ -45,6 +46,7 @@
       font-weight: 700;
       text-decoration: none;
       transition: background 0.2s ease;
+      margin-top: 20px;
     }
     .btn:hover {
       background: #333;
@@ -54,14 +56,85 @@
       color: #28a745;
       margin-bottom: 16px;
     }
+    .order-id {
+      font-size: 14px;
+      color: #444;
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f7f7f7;
+    }
+    .total {
+      font-weight: 900;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="icon">✅</div>
     <h1>Merci pour votre commande !</h1>
-    <p>Votre paiement a bien été reçu. Vous recevrez bientôt un email de confirmation avec les détails de votre commande.</p>
+    <p>Votre paiement a bien été reçu.</p>
+    <p class="order-id" id="orderId"></p>
+
+    <div id="recap">
+      <h2>Récapitulatif</h2>
+      <div id="customer"></div>
+      <table id="cartTable"></table>
+      <p class="total" id="total"></p>
+    </div>
+
     <a href="/" class="btn">Retour à l’accueil</a>
   </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const paymentIntentId = params.get("payment_intent");
+
+    async function loadRecap() {
+      if (!paymentIntentId) return;
+      document.getElementById("orderId").textContent =
+        "Numéro de commande : " + paymentIntentId;
+
+      const res = await fetch("/api/get-intent?id=" + paymentIntentId);
+      const data = await res.json();
+
+      if (data.customer) {
+        document.getElementById("customer").innerHTML = `
+          <p><strong>Client :</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
+          <p><strong>Email :</strong> ${data.customer.email}</p>
+          <p><strong>Adresse :</strong> ${data.customer.address.line1}, ${data.customer.address.postal_code} ${data.customer.address.city}, ${data.customer.address.country}</p>
+        `;
+      }
+
+      if (data.cart && data.cart.length) {
+        let html = "<tr><th>Produit</th><th>Quantité</th><th>Prix</th></tr>";
+        data.cart.forEach(item => {
+          const price = item.price ? (item.price/100).toFixed(2) + " €" : "-";
+          html += `<tr><td>${item.id}</td><td>${item.qty}</td><td>${price}</td></tr>`;
+        });
+        document.getElementById("cartTable").innerHTML = html;
+      }
+
+      if (data.amount) {
+        document.getElementById("total").textContent =
+          "Total payé : " + (data.amount/100).toFixed(2) + " €";
+      }
+    }
+
+    loadRecap();
+  </script>
 </body>
 </html>
+
