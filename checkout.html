@@ -160,19 +160,14 @@
 
   <script>
     // === CONFIG ===
-    const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ton backend
-    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ clé TEST
+    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ ta clé publique test
     const stripe = Stripe(STRIPE_PK);
 
     let elements, paymentElement, clientSecret;
 
     // --- Helpers ---
-    function apiUrl(path){
-      if (!API_BASE) return path;
-      return API_BASE.replace(/\/$/, '') + path;
-    }
     async function apiPost(path, body){
-      const res = await fetch(apiUrl(path), {
+      const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body || {})
@@ -227,7 +222,7 @@
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      const data = await apiPost('/api/create-payment-intent', { cart, customer });
+      const data = await apiPost('/backend/create-payment-intent', { cart, customer });
       return data.clientSecret;
     }
 
