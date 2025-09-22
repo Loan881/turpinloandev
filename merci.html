@@ -8,134 +8,92 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      font-family: "Playfair Display", serif;
-      background: #fafafa;
-      color: #0b0c10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
+    body{
+      margin:0;
+      font-family:"Playfair Display",serif;
+      background:#fff;
+      color:#0b0c10;
+      padding:40px;
     }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-      max-width: 600px;
-      width: 100%;
-      padding: 40px 30px;
-      text-align: center;
+    .container{
+      max-width:800px;
+      margin:0 auto;
+      text-align:center;
     }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 12px;
+    h1{ font-size:32px; margin-bottom:16px; }
+    p{ font-size:18px; margin-bottom:20px; }
+    .order{
+      text-align:left;
+      border:1px solid #ddd;
+      border-radius:10px;
+      padding:20px;
+      margin-top:30px;
     }
-    p {
-      font-size: 16px;
-      color: #636570;
-      margin-bottom: 16px;
+    .summary-line{
+      display:flex;
+      justify-content:space-between;
+      margin:8px 0;
     }
-    .btn {
-      display: inline-block;
-      padding: 12px 20px;
-      border-radius: 10px;
-      background: #111;
-      color: #fff;
-      font-weight: 700;
-      text-decoration: none;
-      transition: background 0.2s ease;
-      margin-top: 20px;
-    }
-    .btn:hover {
-      background: #333;
-    }
-    .icon {
-      font-size: 48px;
-      color: #28a745;
-      margin-bottom: 16px;
-    }
-    .order-id {
-      font-size: 14px;
-      color: #444;
-      margin-bottom: 20px;
-      word-break: break-all;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background: #f7f7f7;
-    }
-    .total {
-      font-weight: 900;
-      font-size: 18px;
+    .total{
+      font-weight:900;
+      font-size:20px;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">✅</div>
-    <h1>Merci pour votre commande !</h1>
-    <p>Votre paiement a bien été reçu.</p>
-    <p class="order-id" id="orderId"></p>
+  <div class="container">
+    <h1>Merci pour votre commande 🎉</h1>
+    <p>Nous avons bien reçu votre paiement. Voici le récapitulatif :</p>
 
-    <div id="recap">
-      <h2>Récapitulatif</h2>
-      <div id="customer"></div>
-      <table id="cartTable"></table>
-      <p class="total" id="total"></p>
+    <div id="order" class="order">
+      Chargement de votre commande...
     </div>
-
-    <a href="/" class="btn">Retour à l’accueil</a>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const paymentIntentId = params.get("payment_intent");
+    // 👉 Mets ton URL Vercel ici
+    const API_BASE = "https://ton-projet.vercel.app";
 
-    async function loadRecap() {
-      if (!paymentIntentId) return;
-      document.getElementById("orderId").textContent =
-        "Numéro de commande : " + paymentIntentId;
+    function getQueryParam(name){
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
 
-      // ✅ On appelle maintenant /backend/get-intent
-      const res = await fetch("/backend/get-intent?id=" + paymentIntentId);
-      const data = await res.json();
+    async function loadOrder(){
+      const orderEl = document.getElementById('order');
+      const pi = getQueryParam('payment_intent');
 
-      if (data.customer) {
-        document.getElementById("customer").innerHTML = `
-          <p><strong>Client :</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
-          <p><strong>Email :</strong> ${data.customer.email}</p>
-          <p><strong>Adresse :</strong> ${data.customer.address.line1}, ${data.customer.address.postal_code} ${data.customer.address.city}, ${data.customer.address.country}</p>
+      if (!pi){
+        orderEl.textContent = "Aucun numéro de commande trouvé.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/get-intent?id=${pi}`);
+        if (!res.ok) throw new Error("Erreur API");
+        const data = await res.json();
+
+        if (!data || !data.paymentIntent){
+          orderEl.textContent = "Impossible de récupérer la commande.";
+          return;
+        }
+
+        const intent = data.paymentIntent;
+        const amount = (intent.amount / 100).toFixed(2);
+
+        orderEl.innerHTML = `
+          <div class="summary-line"><span>Numéro de commande</span><strong>${intent.id}</strong></div>
+          <div class="summary-line"><span>Montant payé</span><strong>${amount} €</strong></div>
+          <div class="summary-line"><span>Email</span><strong>${intent.receipt_email || "—"}</strong></div>
+          <div class="summary-line total"><span>Statut</span><span>${intent.status}</span></div>
         `;
-      }
-
-      if (data.cart && data.cart.length) {
-        let html = "<tr><th>Produit</th><th>Quantité</th><th>Prix</th></tr>";
-        data.cart.forEach(item => {
-          const price = item.price ? (item.price/100).toFixed(2) + " €" : "-";
-          html += `<tr><td>${item.id}</td><td>${item.qty}</td><td>${price}</td></tr>`;
-        });
-        document.getElementById("cartTable").innerHTML = html;
-      }
-
-      if (data.amount) {
-        document.getElementById("total").textContent =
-          "Total payé : " + (data.amount/100).toFixed(2) + " €";
+      } catch (err) {
+        console.error(err);
+        orderEl.textContent = "Erreur lors du chargement de la commande.";
       }
     }
 
-    loadRecap();
+    loadOrder();
   </script>
 </body>
 </html>
-
