@@ -3,7 +3,7 @@ import { buffer } from "micro";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const config = {
-  api: { bodyParser: false }, // Stripe exige le raw body
+  api: { bodyParser: false }, // Stripe demande le raw body
 };
 
 export default async function handler(req, res) {
@@ -29,13 +29,16 @@ export default async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
+    // 🔎 Debug
+    console.log("Webhook reçu:", event.type);
+
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
       console.log("✅ Paiement réussi:", paymentIntent.id);
-      // 👉 Ici tu pourras appeler Printful ou envoyer un email de confirmation
+      // 👉 Ici tu pourras appeler Printful
     }
 
-    res.json({ received: true });
+    res.json({ debug: { cors: true, event: event.type }, received: true });
   } catch (err) {
     console.error("⚠️ Webhook error:", err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);
