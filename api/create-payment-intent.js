@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   try {
     const { cart, customer } = req.body;
 
-    // Calcul simple du montant total (exemple : 20€ par article)
+    // Exemple de calcul simple du montant
     const amount = cart.reduce((sum, item) => sum + item.qty * 2000, 0);
 
     const paymentIntent = await stripe.paymentIntents.create({
