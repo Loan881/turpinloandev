@@ -133,14 +133,6 @@
           <h3 class="section-title">Paiement</h3>
           <div id="payment-element"></div>
 
-          <!-- ✅ Enregistrer la carte -->
-          <div class="field">
-            <label style="display:flex; gap:8px; align-items:center">
-              <input id="saveCard" type="checkbox">
-              <span class="muted-small">Enregistrer cette carte pour mes prochains achats</span>
-            </label>
-          </div>
-
           <div class="field">
             <label style="display:flex; gap:8px; align-items:center">
               <input id="tos" type="checkbox" required>
@@ -169,7 +161,7 @@
   <script>
     // === CONFIG ===
     const API_BASE = 'https://stripe-backend-ivory.vercel.app'; // ton backend
-    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ clé TEST en dev
+    const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ clé TEST
     const stripe = Stripe(STRIPE_PK);
 
     let elements, paymentElement, clientSecret;
@@ -191,7 +183,7 @@
       if (!res.ok) throw new Error(json?.error || 'HTTP ' + res.status);
       return json;
     }
-    const formatEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v / 100);
+
     const cartKey = 'cart';
     function loadCart(){ return JSON.parse(localStorage.getItem(cartKey) || '[]'); }
 
@@ -235,8 +227,7 @@
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      const saveCard = document.getElementById('saveCard').checked;
-      const data = await apiPost('/api/create-payment-intent', { cart, email: customer.email, customer, saveCard });
+      const data = await apiPost('/api/create-payment-intent', { cart, customer });
       return data.clientSecret;
     }
 
@@ -244,7 +235,7 @@
       clientSecret = await createIntentWithCustomer();
       if (!clientSecret) throw new Error('clientSecret manquant');
       elements = stripe.elements({ clientSecret });
-      paymentElement = elements.create('payment', {});
+      paymentElement = elements.create('payment');
       paymentElement.mount('#payment-element');
     }
 
@@ -259,31 +250,17 @@
         }
         btn.disabled = true;
         status.textContent = 'Traitement du paiement…';
-        const customer = collectCustomer();
-        const { error, paymentIntent } = await stripe.confirmPayment({
+
+        const { error } = await stripe.confirmPayment({
           elements,
           confirmParams: {
-            receipt_email: customer.email,
-            payment_method_data: {
-              billing_details: {
-                email: customer.email,
-                name: customer.firstName + ' ' + customer.lastName,
-                phone: customer.phone
-              }
-            },
             return_url: window.location.origin + '/merci.html'
           }
         });
+
         if (error){
           status.textContent = error.message || 'Paiement refusé';
           btn.disabled = false;
-          return;
-        }
-        if (paymentIntent && paymentIntent.status === 'succeeded'){
-          status.textContent = 'Merci ! Paiement réussi.';
-          localStorage.setItem(cartKey, '[]');
-        } else {
-          status.textContent = 'Statut: ' + (paymentIntent?.status || 'inconnu');
         }
       } catch(err){
         status.textContent = err.message;
@@ -297,9 +274,10 @@
         await renderCart();
         await mountPaymentElement();
       } catch (err){
-        document.getElementById('status').textContent = (err && err.message ? err.message : String(err)) + ' — Vérifie /api/create-payment-intent, la clé Stripe et les logs.';
+        document.getElementById('status').textContent = err.message;
       }
     })();
   </script>
 </body>
 </html>
+
