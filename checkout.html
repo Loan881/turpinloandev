@@ -163,6 +163,9 @@
     const STRIPE_PK = 'pk_test_xxxxxxxxxxxxxxxxxxxxx'; // ⚠️ ta clé publique test
     const stripe = Stripe(STRIPE_PK);
 
+    // 👉 Remplace par ton URL Vercel
+    const API_BASE = "https://ton-projet.vercel.app";
+
     let elements, paymentElement, clientSecret;
 
     // --- Helpers ---
@@ -222,8 +225,7 @@
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      // 🔥 correction ici : backend → api
-      const data = await apiPost('/api/create-payment-intent', { cart, customer });
+      const data = await apiPost(`${API_BASE}/api/create-payment-intent`, { cart, customer });
       return data.clientSecret;
     }
 
@@ -276,3 +278,4 @@
   </script>
 </body>
 </html>
+
