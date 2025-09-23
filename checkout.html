@@ -160,11 +160,11 @@
 
   <script>
     // === CONFIG ===
-    const STRIPE_PK = "pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL"; // ⚠️ Mets ta clé publique Stripe (pas la secrète !)
+    const STRIPE_PK = "pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL"; // ta clé publique Stripe (PAS la clé secrète)
     const stripe = Stripe(STRIPE_PK);
 
-    // 👉 URL backend Vercel
-    const API_BASE = "https://mon-backend-jhdbawwh2-loans-projects-fddc03b9.vercel.app/api";
+    // 👉 URL backend Vercel (sans /api à la fin)
+    const API_BASE = "https://mon-backend-jhdbawwh2-loans-projects-fddc03b9.vercel.app";
 
     let elements, paymentElement, clientSecret;
 
@@ -221,7 +221,7 @@
     async function createIntentWithCustomer(){
       const cart = loadCart();
       const customer = collectCustomer();
-      const data = await apiPost(`${API_BASE}/create-payment-intent`, { cart, customer });
+      const data = await apiPost(`${API_BASE}/api/create-payment-intent`, { cart, customer });
       return data.clientSecret;
     }
 
