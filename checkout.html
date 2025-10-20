@@ -126,7 +126,8 @@
           <h3 class="section-title">Livraison</h3>
           <div class="field">
             <select id="shipping_method" required>
-              <option value="standard" selected>Standard (10 j) — calculé après</option>
+              <option value="standard" selected>Livraison standard (10 jours)</option>
+              <option value="relay">Point relais (Mondial Relay / Chrono Relais)</option>
             </select>
           </div>
 
@@ -151,7 +152,7 @@
         <div id="cart" class="cart-lines"></div>
         <hr>
         <div class="summary-line"><span>Sous-total</span><strong id="subtotal">0 €</strong></div>
-        <div class="summary-line"><span>Livraison</span><span id="ship">Standard (10 j)</span></div>
+        <div class="summary-line"><span>Livraison</span><span id="ship">Livraison standard (10 jours)</span></div>
         <div class="summary-line total"><span>Total</span><span id="total">0 €</span></div>
         <p class="muted-small">Le total final peut inclure les frais de port selon l’adresse et la méthode de livraison.</p>
       </aside>
@@ -160,10 +161,9 @@
 
   <script>
     // === CONFIG ===
-    const STRIPE_PK = "pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL"; // ⚠️ mets ici ta clé publique test
+    const STRIPE_PK = "pk_live_51S65FIJ9IAqo8WkSDZLKYqKMMRCbn0oiZynj97MbpwlVmmE5BMe9dQikAqS3Vm3wZcpa5THt6B3MgVnfUGMlKhrK00LEcREicL";
     const stripe = Stripe(STRIPE_PK);
 
-    // 👉 URL backend Vercel
     const API_BASE = "https://mon-backend-gvm3a4x7j-loans-projects-fddc03b9.vercel.app/api";
 
     let elements, paymentElement, clientSecret;
@@ -199,6 +199,36 @@
       }
       subtotalEl.textContent = "—";
       totalEl.textContent = "—";
+    }
+
+    // === GESTION DU MODE DE LIVRAISON ===
+    const shippingSelect = document.getElementById("shipping_method");
+    const shipLabel = document.getElementById("ship");
+
+    shippingSelect.addEventListener("change", () => {
+      const val = shippingSelect.value;
+      if (val === "standard") {
+        shipLabel.textContent = "Livraison standard (10 jours)";
+      } else if (val === "relay") {
+        shipLabel.textContent = "Point relais (Mondial Relay / Chrono Relais)";
+      }
+      updateShippingCost();
+    });
+
+    // Calcul du total (avec exemple de frais)
+    function updateShippingCost() {
+      const totalEl = document.getElementById("total");
+      const subtotalEl = document.getElementById("subtotal");
+      const shippingVal = shippingSelect.value;
+      const subtotal = 40; // exemple à remplacer par ton vrai sous-total
+      let shippingCost = 0;
+
+      if (shippingVal === "standard") shippingCost = 5;
+      else if (shippingVal === "relay") shippingCost = 3;
+
+      subtotalEl.textContent = subtotal.toFixed(2) + " €";
+      shipLabel.textContent = `${shippingVal === "standard" ? "Livraison standard (10 jours)" : "Point relais"} — ${shippingCost} €`;
+      totalEl.textContent = (subtotal + shippingCost).toFixed(2) + " €";
     }
 
     function collectCustomer(){
@@ -266,6 +296,7 @@
       try{
         await renderCart();
         await mountPaymentElement();
+        updateShippingCost();
       } catch (err){
         document.getElementById("status").textContent = err.message;
       }
